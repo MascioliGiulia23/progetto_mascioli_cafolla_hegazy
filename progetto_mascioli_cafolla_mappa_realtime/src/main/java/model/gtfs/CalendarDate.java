@@ -30,7 +30,7 @@ public class CalendarDate {
     public CalendarDate(String serviceId, boolean monday, boolean tuesday, boolean wednesday,
                         boolean thursday, boolean friday, boolean saturday, boolean sunday,
                         LocalDate startDate, LocalDate endDate) {
-        this.serviceId = "";
+        this.serviceId = serviceId;
         this.monday = monday;
         this.tuesday = tuesday;
         this.wednesday = wednesday;
