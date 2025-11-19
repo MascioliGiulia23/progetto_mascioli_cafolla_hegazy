@@ -3,7 +3,10 @@ package controller;
 import model.gtfs.*;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.GeoPosition;
+import service.ConnectivityService;
+import service.GtfsRealtimeVehicleService;
 import service.MapService;
+import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
 import view.panels.SearchResultsPanel;
@@ -11,11 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-
-
- //Gestisce la logica di interazione tra la mappa (JXMapViewer),
- // il servizio dati GTFS (MapService) e la view (pannelli grafici).
-
+import javax.swing.Timer;
 public class MapController {
 
     private final JXMapViewer mapViewer;
@@ -24,16 +23,17 @@ public class MapController {
     private final WaypointDrawer waypointDrawer;
     private final SearchResultsPanel resultsPanel;
 
-    // dati GTFS
     private final List<Fermate> fermate;
     private final List<Route> rotte;
     private final List<Trip> trips;
     private final List<StopTime> stopTimes;
     private final Map<String, ShapeRoute> forme;
 
-    // stato corrente
     private Route currentSelectedRoute;
     private Trip currentSelectedTrip;
+
+    // Timer per aggiornamento real-time
+    private Timer realtimeBusTimer;
 
     public MapController(JXMapViewer mapViewer,
                          MapService mapService,
@@ -57,13 +57,10 @@ public class MapController {
         this.forme = forme;
     }
 
-    //Disegna la linea selezionata e mostra le relative fermate.
-
     public void mostraLinea(Route rotta) {
         currentSelectedRoute = rotta;
         System.out.println("Linea selezionata: " + rotta.getRouteShortName());
 
-        // filtro trip associati
         List<Trip> tripsLinea = new ArrayList<>();
         for (Trip t : trips) {
             if (t.getRouteId().equals(rotta.getRouteId())) {
@@ -76,7 +73,6 @@ public class MapController {
             return;
         }
 
-        // calcola la direzione principale per entrambe le direzioni
         Map<String, List<StopTime>> stopTimesPerTrip = new HashMap<>();
         for (StopTime st : stopTimes) {
             stopTimesPerTrip
@@ -119,13 +115,11 @@ public class MapController {
             return;
         }
 
-        // una sola direzione
         if (direzioni.size() == 1) {
             disegnaDirezione(rotta, direzioni.get(0), Color.RED);
             return;
         }
 
-        // più direzioni → chiedi all’utente
         scegliDirezioneEVisualizza(rotta, direzioni);
     }
 
@@ -189,6 +183,80 @@ public class MapController {
         mapViewer.setZoom(6);
         GeoPosition center = mapViewer.getAddressLocation();
         mapViewer.setAddressLocation(new GeoPosition(center.getLatitude() - 0.01, center.getLongitude() - 0.025));
+
+        // ⭐ AVVIA AGGIORNAMENTO REAL-TIME DEI BUS
+        avviaAggiornamentoRealtimeBus(rotta, trip);
     }
 
+    /**
+     * Avvia il timer per aggiornare le posizioni dei bus ogni 30 secondi
+     */
+    private void avviaAggiornamentoRealtimeBus(Route rotta, Trip trip) {
+        // Ferma il timer precedente se esiste
+        fermaAggiornamentoRealtimeBus();
+
+        // Verifica connessione
+        if (!ConnectivityService.isOnline()) {
+            System.out.println("[Real-time] Utente offline, aggiornamento disabilitato");
+            return;
+        }
+
+        System.out.println("[Real-time] Avvio aggiornamento bus per route=" +
+                rotta.getRouteId() + " direction=" + trip.getDirectionId());
+
+        // Carica immediatamente i bus
+        aggiornaPosizoniBus(rotta, trip);
+
+        // Timer per aggiornamento ogni 30 secondi
+        realtimeBusTimer = new Timer(30000, e -> {
+            if (ConnectivityService.isOnline()) {
+                aggiornaPosizoniBus(rotta, trip);
+            } else {
+                System.out.println("[Real-time] Connessione persa, skip aggiornamento");
+            }
+        });
+        realtimeBusTimer.start();
+    }
+
+    /**
+     * Aggiorna le posizioni dei bus sulla mappa
+     */
+    private void aggiornaPosizoniBus(Route rotta, Trip trip) {
+        System.out.println("[Real-time] Aggiornamento posizioni bus...");
+
+        // Scarica posizioni veicoli filtrate per route e direction
+        List<GtfsRealtimeVehicleService.VehicleData> vehicles =
+                GtfsRealtimeVehicleService.getVehiclesForRouteAndDirection(
+                        rotta.getRouteId(),
+                        trip.getDirectionId()
+                );
+
+        // Rimuovi i bus precedenti
+        waypointDrawer.clearRealtimeBusWaypoints();
+
+        // Aggiungi i nuovi bus
+        List<BusWaypoint> busWaypoints = new ArrayList<>();
+        for (GtfsRealtimeVehicleService.VehicleData vehicle : vehicles) {
+            BusWaypoint busWp = new BusWaypoint(
+                    vehicle.toGeoPosition(),
+                    vehicle.getBearing(),
+                    vehicle.getVehicleId()
+            );
+            busWaypoints.add(busWp);
+        }
+
+        waypointDrawer.addWaypoints(busWaypoints);
+
+        System.out.println("[Real-time] ✓ " + busWaypoints.size() + " bus aggiornati sulla mappa");
+    }
+
+    /**
+     * Ferma l'aggiornamento real-time dei bus
+     */
+    public void fermaAggiornamentoRealtimeBus() {
+        if (realtimeBusTimer != null && realtimeBusTimer.isRunning()) {
+            realtimeBusTimer.stop();
+            System.out.println("[Real-time] Timer fermato");
+        }
+    }
 }

@@ -373,8 +373,17 @@ public class Mappa extends JFrame {
             if (settingsPanel != null) {
                 settingsPanel.setBounds(layeredPane.getWidth() - 410, 100, 380, 400);
             }
+
         }
     }
+    @Override
+    public void dispose() {
+        if (mapController != null) {
+            mapController.fermaAggiornamentoRealtimeBus();
+        }
+        super.dispose();
+    }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

@@ -24,9 +24,6 @@ public class WaypointDrawer {
         this.routeDrawer = routeDrawer;
     }
 
-    /**
-     * Aggiunge un singolo waypoint sulla mappa
-     */
     public void addWaypoint(BusWaypoint waypoint) {
         if (waypoint != null) {
             waypoints.add(waypoint);
@@ -34,9 +31,6 @@ public class WaypointDrawer {
         }
     }
 
-    /**
-     * Aggiunge più waypoint sulla mappa
-     */
     public void addWaypoints(Collection<BusWaypoint> newWaypoints) {
         if (newWaypoints != null) {
             waypoints.addAll(newWaypoints);
@@ -44,9 +38,6 @@ public class WaypointDrawer {
         }
     }
 
-    /**
-     * Cancella tutti i waypoint
-     */
     public void clearWaypoints() {
         waypoints.clear();
         updatePainters();
@@ -54,15 +45,19 @@ public class WaypointDrawer {
     }
 
     /**
-     * Aggiorna i painter sulla mappa
+     * Rimuove solo i waypoint dei bus real-time, mantenendo quelli delle fermate
      */
+    public void clearRealtimeBusWaypoints() {
+        waypoints.removeIf(wp -> wp.getType() == BusWaypoint.WaypointType.REALTIME_BUS);
+        updatePainters();
+    }
+
     private void updatePainters() {
         if (!waypoints.isEmpty()) {
             WaypointPainter waypointPainter = new WaypointPainter(waypoints);
 
             List<Painter<JXMapViewer>> allPainters = new ArrayList<>();
 
-            // Aggiungi prima la linea (dal routeDrawer)
             if (routeDrawer != null) {
                 List<GeoPosition> routePoints = routeDrawer.getGeoPositions();
                 if (routePoints != null && !routePoints.isEmpty()) {
@@ -70,10 +65,8 @@ public class WaypointDrawer {
                 }
             }
 
-            // Poi i waypoint
             allPainters.add(waypointPainter);
 
-            // Combina entrambi
             CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(allPainters);
             mapViewer.setOverlayPainter(compoundPainter);
 
@@ -105,21 +98,45 @@ public class WaypointDrawer {
                 GeoPosition gp = waypoint.getPosition();
                 Point2D pt = map.getTileFactory().geoToPixel(gp, map.getZoom());
 
-                // Disegna cerchio rosso per il waypoint
-                g.setColor(new Color(255, 100, 100, 200));
-                g.fillOval((int) pt.getX() - 8, (int) pt.getY() - 8, 16, 16);
-
-                // Bordo scuro
-                g.setColor(new Color(200, 0, 0, 255));
-                g.setStroke(new BasicStroke(2));
-                g.drawOval((int) pt.getX() - 8, (int) pt.getY() - 8, 16, 16);
-
-                // Pallino bianco al centro
-                g.setColor(Color.WHITE);
-                g.fillOval((int) pt.getX() - 3, (int) pt.getY() - 3, 6, 6);
+                if (waypoint.getType() == BusWaypoint.WaypointType.STOP) {
+                    // Disegna fermata (cerchio rosso)
+                    drawStopWaypoint(g, pt);
+                } else if (waypoint.getType() == BusWaypoint.WaypointType.REALTIME_BUS) {
+                    // Disegna bus real-time (pallino verde)
+                    drawBusWaypoint(g, pt, waypoint.getBearing());
+                }
             }
 
             g.dispose();
+        }
+
+        private void drawStopWaypoint(Graphics2D g, Point2D pt) {
+            // Cerchio rosso per fermata
+            g.setColor(new Color(255, 100, 100, 200));
+            g.fillOval((int) pt.getX() - 8, (int) pt.getY() - 8, 16, 16);
+
+            g.setColor(new Color(200, 0, 0, 255));
+            g.setStroke(new BasicStroke(2));
+            g.drawOval((int) pt.getX() - 8, (int) pt.getY() - 8, 16, 16);
+
+            g.setColor(Color.WHITE);
+            g.fillOval((int) pt.getX() - 3, (int) pt.getY() - 3, 6, 6);
+        }
+
+        // ⭐ METODO MODIFICATO: pallino verde invece di triangolo blu
+        private void drawBusWaypoint(Graphics2D g, Point2D pt, float bearing) {
+            // Cerchio verde principale
+            g.setColor(new Color(76, 175, 80, 230)); // Verde Material Design
+            g.fillOval((int) pt.getX() - 10, (int) pt.getY() - 10, 20, 20);
+
+            // Bordo verde scuro
+            g.setColor(new Color(27, 94, 32, 255)); // Verde scuro
+            g.setStroke(new BasicStroke(2));
+            g.drawOval((int) pt.getX() - 10, (int) pt.getY() - 10, 20, 20);
+
+            // Pallino bianco al centro (per dare profondità)
+            g.setColor(Color.WHITE);
+            g.fillOval((int) pt.getX() - 4, (int) pt.getY() - 4, 8, 8);
         }
     }
 }
