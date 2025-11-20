@@ -277,10 +277,8 @@ public class Database {
                 }
             }
 
-            System.out.println("✓ Caricate " + eccezioni.size() + " eccezioni da static_gtfs/calendar_dates.txt");
-
         } catch (Exception e) {
-            System.err.println("Errore nella lettura di static_gtfs/calendar_dates.txt: " + e.getMessage());
+
         }
 
         return eccezioni;

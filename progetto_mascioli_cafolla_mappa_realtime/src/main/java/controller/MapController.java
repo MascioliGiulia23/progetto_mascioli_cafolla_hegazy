@@ -148,7 +148,7 @@ public class MapController {
                 null,
                 "Scegli la direzione della linea " + rotta.getRouteShortName() + ":",
                 "Seleziona direzione",
-                JOptionPane.QUESTION_MESSAGE,
+                JOptionPane.PLAIN_MESSAGE,
                 null,
                 opzioni,
                 opzioni[0]);

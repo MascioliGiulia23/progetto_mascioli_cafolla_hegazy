@@ -144,4 +144,8 @@ public class SearchBar extends JPanel {
         searchField.setCaretColor(SettingsPanel.getThemeColor(theme));
         repaint();
     }
+    public void clearSearch() {
+        searchField.setText("Cerca fermate, stazioni...");
+        searchField.setForeground(new Color(160, 160, 160));
+    }
 }

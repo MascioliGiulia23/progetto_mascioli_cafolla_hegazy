@@ -33,6 +33,10 @@ public class SearchResultsPanel extends JPanel {
     private boolean ripristinando = false;
 
     private String currentTheme = "Blu";
+
+    private JButton closeButton;
+    private java.util.function.Consumer<Void> onCloseListener;
+
     private java.util.function.Consumer<Fermate> onStopClickListener; // listener per fermate
     private java.util.function.Consumer<Route> onRouteClickListener; // listener per rotte
 
@@ -86,6 +90,47 @@ public class SearchResultsPanel extends JPanel {
     private void initializeUI() {
         setLayout(new BorderLayout());
         setOpaque(false);
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 5, 10));
+
+        JLabel titleLabel = new JLabel("Risultati");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(50, 50, 50));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+
+        // Bottone X (stile identico a FavoritesPanel)
+        closeButton = new JButton("x");
+        closeButton.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        closeButton.setForeground(Color.DARK_GRAY);
+        closeButton.setFocusPainted(false);
+        closeButton.setContentAreaFilled(false);
+        closeButton.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
+        closeButton.setPreferredSize(new Dimension(25, 25));
+        closeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        closeButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                closeButton.setForeground(Color.RED);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                closeButton.setForeground(Color.DARK_GRAY);
+            }
+        });
+
+        closeButton.addActionListener(e -> {
+            if (onCloseListener != null) {
+                onCloseListener.accept(null);
+            }
+        });
+
+        headerPanel.add(closeButton, BorderLayout.EAST);
+        add(headerPanel, BorderLayout.NORTH);
+
 
         resultsContainer = new JPanel();
         resultsContainer.setLayout(new BoxLayout(resultsContainer, BoxLayout.Y_AXIS));
@@ -336,7 +381,7 @@ public class SearchResultsPanel extends JPanel {
                                    Trip direzioneCorrente,
                                    String contesto) {
         clearResults();
-       // System.out.println("👉 Mostra orari fermata chiamato per: " + fermata.getStopName());
+
 
         // Mappe hash per lookups O(1)
         Map<String, Trip> tripMap = new HashMap<>(trips.size());
@@ -899,7 +944,7 @@ public class SearchResultsPanel extends JPanel {
             if (!ultimeRotte.isEmpty()) {
                 aggiornaRisultatiRotte(ultimeRotte);
             } else {
-                JLabel msg = new JLabel("⚠ Nessuna linea precedente trovata.", SwingConstants.CENTER);
+                JLabel msg = new JLabel("Nessuna linea precedente trovata.", SwingConstants.CENTER);
                 msg.setFont(new Font("Segoe UI", Font.ITALIC, 13));
                 msg.setForeground(Color.DARK_GRAY);
                 resultsContainer.add(msg);
@@ -939,6 +984,10 @@ public class SearchResultsPanel extends JPanel {
                 }
             }
         });
-    }
 
+    }
+    public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
+        this.onCloseListener = listener;
+
+    }
 }

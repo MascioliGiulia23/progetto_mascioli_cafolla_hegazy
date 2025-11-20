@@ -91,6 +91,15 @@ public class Mappa extends JFrame {
         resultsPanel.setVisible(false);
         layeredPane.add(resultsPanel, JLayeredPane.PALETTE_LAYER);
 
+        resultsPanel.setOnCloseListener(v -> {
+            resultsPanel.setVisible(false);
+            resultsPanel.clearResults();
+            searchBar.clearSearch();  // ← AGGIUNGI QUESTA RIGA
+            if (waypointDrawer != null) waypointDrawer.clearWaypoints();
+            if (routeDrawer != null) routeDrawer.clearAll();
+        });
+
+
         topRightPanel = new TopRightPanel();
         topRightPanel.setBounds(getWidth() - 500, 15, 480, 55);
         layeredPane.add(topRightPanel, JLayeredPane.PALETTE_LAYER);
@@ -184,7 +193,7 @@ public class Mappa extends JFrame {
     private void setupSearchListener() {
         searchBar.setOnSearchListener(e -> {
             String testo = searchBar.getSearchText().trim();
-            System.out.println("🔍 Ricerca attivata: " + testo);
+            System.out.println("Ricerca attivata: " + testo);
 
             if (testo.isEmpty()) return;
 
@@ -196,7 +205,7 @@ public class Mappa extends JFrame {
             if (testo.matches("\\d+")) {
                 System.out.println("→ Ricerca numerica: controllo ID fermata e ID linea");
 
-                // 1️⃣ Cerca fermata con stop_id uguale
+                // 1 Cerca fermata con stop_id uguale
                 Fermate fermataTrovata = fermate.stream()
                         .filter(f -> f.getStopId().equals(testo))
                         .findFirst()
@@ -208,7 +217,7 @@ public class Mappa extends JFrame {
                     resultsPanel.aggiornaRisultati(List.of(fermataTrovata));
                 }
 
-                // 2️⃣ Cerca linea con route_id uguale
+                // 2 Cerca linea con route_id uguale
                 Route rottaTrovata = rotte.stream()
                         .filter(r -> r.getRouteId().equals(testo))
                         .findFirst()
@@ -220,7 +229,7 @@ public class Mappa extends JFrame {
                     resultsPanel.aggiornaRisultatiRotte(List.of(rottaTrovata));
                 }
 
-                // 3️⃣ Se non trova nulla come ID → cerca per nome numerico
+                // 3 Se non trova nulla come ID → cerca per nome numerico
                 if (!trovataFermata && !trovataRotta) {
                     List<Route> rotteTrovate = Database.ricercaRottePerNome(rotte, testo);
                     trovataRotta = !rotteTrovate.isEmpty();
@@ -228,7 +237,7 @@ public class Mappa extends JFrame {
                 }
 
             } else {
-                // 🔤 Ricerca testuale (nome)
+                // Ricerca testuale (nome)
                 System.out.println("→ Ricerca testuale: cerco fermate e linee per nome");
 
                 List<Fermate> fermateTrovate = Database.ricercaFermatePerNome(fermate, testo);
@@ -309,7 +318,6 @@ public class Mappa extends JFrame {
                 favoritesPanel.setVisible(true);
                 userProfilePanel.setVisible(false);
                 settingsPanel.setVisible(false);
-                resultsPanel.setVisible(false);
             }
         });
 
@@ -320,7 +328,6 @@ public class Mappa extends JFrame {
                 userProfilePanel.setVisible(true);
                 favoritesPanel.setVisible(false);
                 settingsPanel.setVisible(false);
-                resultsPanel.setVisible(false);
             }
         });
 
@@ -331,7 +338,6 @@ public class Mappa extends JFrame {
                 settingsPanel.setVisible(true);
                 favoritesPanel.setVisible(false);
                 userProfilePanel.setVisible(false);
-                resultsPanel.setVisible(false);
             }
         });
 
