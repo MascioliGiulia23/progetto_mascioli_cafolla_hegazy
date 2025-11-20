@@ -123,7 +123,7 @@ public class Mappa extends JFrame {
         setupButtonListeners();
         userProfilePanel.setOnLoginListener(() -> {
             String usernameAutenticato = userProfilePanel.getCurrentUsername();
-            System.out.println("✓ Login detected: " + usernameAutenticato);
+            System.out.println("Login detected: " + usernameAutenticato);
             if (usernameAutenticato != null) {
                 favoritesPanel.caricaPreferiti(usernameAutenticato);
             }

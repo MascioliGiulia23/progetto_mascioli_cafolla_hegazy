@@ -56,39 +56,87 @@ public class ConnectivityService {
         }
     }
 
-    /**
-     * Mostra un messaggio temporaneo che scompare dopo 3 secondi.
-     */
+
+     //Mostra un messaggio temporaneo che scompare dopo 3 secondi.
     private static void showConnectionToast(boolean isOnline) {
         JWindow toast = new JWindow();
         toast.setBackground(new Color(0, 0, 0, 0));
+        toast.setOpacity(0.0f);
 
-        JPanel panel = new JPanel();
-        panel.setBackground(isOnline ? new Color(46, 204, 113) : new Color(231, 76, 60));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.WHITE, 2),
-                BorderFactory.createEmptyBorder(15, 20, 15, 20)
-        ));
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        JLabel label = new JLabel(isOnline ? "Connessione ripristinata" : " Connessione persa");
+                // Ombra
+                g2.setColor(new Color(0, 0, 0, 30));
+                g2.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 15, 15);
+
+                // Sfondo principale
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth() - 4, getHeight() - 4, 15, 15);
+                g2.dispose();
+            }
+        };
+
+        panel.setOpaque(false);
+        panel.setLayout(new BorderLayout(10, 0));
+        panel.setBackground(isOnline ? new Color(76, 175, 80) : new Color(244, 67, 54));
+        panel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+
+        // Icona
+        JLabel icon = new JLabel();
+        icon.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        icon.setForeground(Color.WHITE);
+        panel.add(icon, BorderLayout.WEST);
+
+        // Testo
+        JLabel label = new JLabel(isOnline ? "Connessione ripristinata" : "Connessione persa");
         label.setForeground(Color.WHITE);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        panel.add(label);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        panel.add(label, BorderLayout.CENTER);
 
         toast.add(panel);
         toast.pack();
-        toast.setSize(250, 50);
 
-        // Posiziona in basso a sinistra
+        // Posizione in basso a destra (più moderno)
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        toast.setLocation(50, screen.height - toast.getHeight() - 100);
-
+        toast.setLocation(screen.width - toast.getWidth() - 30,
+                screen.height - toast.getHeight() - 80);
 
         toast.setVisible(true);
 
-        // Chiudi dopo 3 secondi
-        Timer timer = new Timer(3000, e -> toast.dispose());
-        timer.setRepeats(false);
-        timer.start();
+        // Fade in
+        Timer fadeIn = new Timer(30, null);
+        fadeIn.addActionListener(e -> {
+            float opacity = toast.getOpacity();
+            if (opacity < 0.95f) {
+                toast.setOpacity(opacity + 0.05f);
+            } else {
+                toast.setOpacity(0.95f);
+                ((Timer) e.getSource()).stop();
+            }
+        });
+        fadeIn.start();
+
+        // Fade out dopo 2.5 secondi
+        Timer delayTimer = new Timer(2500, e -> {
+            Timer fadeOut = new Timer(30, null);
+            fadeOut.addActionListener(ev -> {
+                float opacity = toast.getOpacity();
+                if (opacity > 0.0f) {
+                    toast.setOpacity(opacity - 0.05f);
+                } else {
+                    ((Timer) ev.getSource()).stop();
+                    toast.dispose();
+                }
+            });
+            fadeOut.start();
+        });
+        delayTimer.setRepeats(false);
+        delayTimer.start();
     }
+
 }
+
