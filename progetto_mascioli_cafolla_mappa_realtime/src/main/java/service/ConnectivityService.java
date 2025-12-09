@@ -58,85 +58,99 @@ public class ConnectivityService {
 
 
      //Mostra un messaggio temporaneo che scompare dopo 3 secondi.
-    private static void showConnectionToast(boolean isOnline) {
-        JWindow toast = new JWindow();
-        toast.setBackground(new Color(0, 0, 0, 0));
-        toast.setOpacity(0.0f);
+// Mostra un messaggio temporaneo che scompare dopo 3 secondi.
+     private static void showConnectionToast(boolean isOnline) {
+         JWindow toast = new JWindow();
+         toast.setBackground(new Color(0, 0, 0, 0));
+         toast.setOpacity(0.0f);
 
-        JPanel panel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+         JPanel panel = new JPanel() {
+             @Override
+             protected void paintComponent(Graphics g) {
+                 Graphics2D g2 = (Graphics2D) g.create();
+                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Ombra
-                g2.setColor(new Color(0, 0, 0, 30));
-                g2.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 15, 15);
+                 // Ombra
+                 g2.setColor(new Color(0, 0, 0, 30));
+                 g2.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 15, 15);
 
-                // Sfondo principale
-                g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth() - 4, getHeight() - 4, 15, 15);
-                g2.dispose();
-            }
-        };
+                 // Sfondo principale
+                 g2.setColor(getBackground());
+                 g2.fillRoundRect(0, 0, getWidth() - 4, getHeight() - 4, 15, 15);
+                 g2.dispose();
+             }
+         };
 
-        panel.setOpaque(false);
-        panel.setLayout(new BorderLayout(10, 0));
-        panel.setBackground(isOnline ? new Color(76, 175, 80) : new Color(244, 67, 54));
-        panel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+         panel.setOpaque(false);
+         panel.setLayout(new BorderLayout(10, 0));
+         panel.setBackground(isOnline ? new Color(76, 175, 80) : new Color(244, 67, 54));
+         panel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
 
-        // Icona
-        JLabel icon = new JLabel();
-        icon.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        icon.setForeground(Color.WHITE);
-        panel.add(icon, BorderLayout.WEST);
+         // Icona
+         JLabel icon = new JLabel();
+         icon.setFont(new Font("Segoe UI", Font.BOLD, 18));
+         icon.setForeground(Color.WHITE);
+         // Aggiungi un simbolo (opzionale, se vuoi vedere qualcosa)
+         icon.setText(isOnline ? "✓" : "⚠");
+         panel.add(icon, BorderLayout.WEST);
 
-        // Testo
-        JLabel label = new JLabel(isOnline ? "Connessione ripristinata" : "Connessione persa");
-        label.setForeground(Color.WHITE);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        panel.add(label, BorderLayout.CENTER);
+         // Testo
+         JLabel label = new JLabel(isOnline ? "Connessione ripristinata" : "Connessione persa");
+         label.setForeground(Color.WHITE);
+         label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+         panel.add(label, BorderLayout.CENTER);
 
-        toast.add(panel);
-        toast.pack();
+         toast.add(panel);
+         toast.pack();
 
-        // Posizione in basso a destra (più moderno)
-        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        toast.setLocation(screen.width - toast.getWidth() - 30,
-                screen.height - toast.getHeight() - 80);
+         // Posizione in basso a destra
+         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+         toast.setLocation(screen.width - toast.getWidth() - 30,
+                 screen.height - toast.getHeight() - 80);
 
-        toast.setVisible(true);
+         toast.setVisible(true);
 
-        // Fade in
-        Timer fadeIn = new Timer(30, null);
-        fadeIn.addActionListener(e -> {
-            float opacity = toast.getOpacity();
-            if (opacity < 0.95f) {
-                toast.setOpacity(opacity + 0.05f);
-            } else {
-                toast.setOpacity(0.95f);
-                ((Timer) e.getSource()).stop();
-            }
-        });
-        fadeIn.start();
+         // --- FADE IN SICURO ---
+         Timer fadeIn = new Timer(30, null);
+         fadeIn.addActionListener(e -> {
+             float opacity = toast.getOpacity();
+             float newOpacity = opacity + 0.05f;
 
-        // Fade out dopo 2.5 secondi
-        Timer delayTimer = new Timer(2500, e -> {
-            Timer fadeOut = new Timer(30, null);
-            fadeOut.addActionListener(ev -> {
-                float opacity = toast.getOpacity();
-                if (opacity > 0.0f) {
-                    toast.setOpacity(opacity - 0.05f);
-                } else {
-                    ((Timer) ev.getSource()).stop();
-                    toast.dispose();
-                }
-            });
-            fadeOut.start();
-        });
-        delayTimer.setRepeats(false);
-        delayTimer.start();
-    }
+             // Evita di superare 1.0f
+             if (newOpacity > 1.0f) newOpacity = 1.0f;
+
+             toast.setOpacity(newOpacity);
+
+             if (newOpacity >= 0.95f) {
+                 ((Timer) e.getSource()).stop();
+             }
+         });
+         fadeIn.start();
+
+         // --- FADE OUT SICURO ---
+         Timer delayTimer = new Timer(2500, e -> {
+             Timer fadeOut = new Timer(30, null);
+             fadeOut.addActionListener(ev -> {
+                 float opacity = toast.getOpacity();
+                 float newOpacity = opacity - 0.05f;
+
+                 // FIX: Se scende sotto 0, forzalo a 0
+                 if (newOpacity < 0.0f) {
+                     newOpacity = 0.0f;
+                 }
+
+                 toast.setOpacity(newOpacity);
+
+                 if (newOpacity <= 0.0f) {
+                     ((Timer) ev.getSource()).stop();
+                     toast.dispose();
+                 }
+             });
+             fadeOut.start();
+         });
+         delayTimer.setRepeats(false);
+         delayTimer.start();
+     }
 
 }
 

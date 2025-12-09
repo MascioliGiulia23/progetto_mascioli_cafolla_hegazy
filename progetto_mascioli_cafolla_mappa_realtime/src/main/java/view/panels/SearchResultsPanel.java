@@ -9,7 +9,6 @@ import org.jxmapviewer.viewer.GeoPosition;
 import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
-import service.GtfsRealtimeTripUpdatesService;
 
 
 import java.time.LocalTime;
@@ -22,6 +21,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+import model.realtime.*;
+import service.BusTrackingService;
+import service.ConnectivityService;
+import view.components.DelayBadge;
+
 public class SearchResultsPanel extends JPanel {
     private JPanel resultsContainer;
     private JScrollPane scrollPane;
@@ -33,9 +37,11 @@ public class SearchResultsPanel extends JPanel {
     private boolean ripristinando = false;
 
     private String currentTheme = "Blu";
-
+    private BusTrackingService busTrackingService;
+    private Map<String, DelayBadge> delayBadgesMap;
     private JButton closeButton;
     private java.util.function.Consumer<Void> onCloseListener;
+    private JTable currentTable;
 
     private java.util.function.Consumer<Fermate> onStopClickListener; // listener per fermate
     private java.util.function.Consumer<Route> onRouteClickListener; // listener per rotte
@@ -57,8 +63,55 @@ public class SearchResultsPanel extends JPanel {
 
     public SearchResultsPanel() {
         results = new ArrayList<>();
+        delayBadgesMap = new HashMap<>();
         initializeUI();
     }
+
+    /**
+     * Imposta il BusTrackingService
+     */
+    public void setBusTrackingService(BusTrackingService service) {
+        this.busTrackingService = service;
+    }
+
+    /**
+     * Aggiorna tutti i badge di ritardo visualizzati
+     */
+    public void aggiornaDelayInfo(BusTrackingService trackingService) {
+        if (trackingService == null || delayBadgesMap.isEmpty()) {
+            return;
+        }
+
+        System.out.println("[SearchResultsPanel] Aggiornamento " + delayBadgesMap.size() + " badge ritardo...");
+
+        for (Map.Entry<String, DelayBadge> entry : delayBadgesMap.entrySet()) {
+            DelayBadge badge = entry.getValue();
+            DelayInfo oldInfo = badge.getDelayInfo();
+
+            if (oldInfo != null) {
+                List<DelayInfo> newInfos = trackingService.getDelayInfoForStop(
+                        oldInfo.getStopId(), 20
+                );
+
+                for (DelayInfo newInfo : newInfos) {
+                    if (newInfo.getTripId().equals(oldInfo.getTripId()) &&
+                            newInfo.getScheduledTime().equals(oldInfo.getScheduledTime())) {
+                        badge.setDelayInfo(newInfo);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (currentTable != null) {
+            currentTable.repaint();
+        }
+        resultsContainer.revalidate();
+        resultsContainer.repaint();
+
+        System.out.println("[SearchResultsPanel] ✓ Badge aggiornati");
+    }
+
 
 
     // Metodo setter per waypoint
@@ -381,6 +434,7 @@ public class SearchResultsPanel extends JPanel {
                                    Trip direzioneCorrente,
                                    String contesto) {
         clearResults();
+        delayBadgesMap.clear();
 
 
         // Mappe hash per lookups O(1)
@@ -492,72 +546,9 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.add(idPanel);
 
         // RACCOLTA DATI - Unico loop ottimizzato
-       // String[] colonne = {"Linea", "Direzione", "Orario arrivo"};
         List<String[]> righe = new ArrayList<>();
         Set<String> orariGiaAggiunti = new HashSet<>();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
-
-//        List<StopTime> fermataStops = stopTimePerFermata.get(fermata.getStopId());
-//        if (fermataStops != null) {
-//            for (StopTime st : fermataStops) {
-//                if (st.getArrivalTime() == null) continue;
-//
-//                LocalTime arrivo = st.getArrivalTime();
-//                if (arrivo.isBefore(oraCorrente) || arrivo.isAfter(oraMax)) continue;
-//
-//                Trip trip = tripMap.get(st.getTripId());
-//                if (trip == null) continue;
-//
-//                Route route = routeMap.get(trip.getRouteId());
-//                if (route == null) continue;
-//
-//                String nomeLinea = route.getRouteShortName();
-//                String orarioFormattato = arrivo.format(fmt);
-//                String chiave = nomeLinea + "|" + orarioFormattato;
-//
-//
-//                // /////////////capolinea nome DA MODIFICARE
-//                if (orariGiaAggiunti.add(chiave)) {
-//                    String capolineaNome = capolineaPerTrip.getOrDefault(trip.getTripId(), "?");
-//                    String direzione = " → " + capolineaNome;
-//
-//                    //  1. Ottieni orario di base (statico)
-//                    String orarioFinale = orarioFormattato;
-//
-//                    //  2. Se siamo online, prova a caricare il ritardo reale
-//                    if (service.ConnectivityService.isOnline()) {
-//                        try {
-//                            Map<String, Integer> ritardi = GtfsRealtimeTripUpdatesService.getRealtimeDelays();
-//                            Integer delay = ritardi.get(fermata.getStopId());
-//
-//                            if (delay != null) {
-//                                if (delay > 1) {
-//                                    orarioFinale += "  (+" + delay + " min)";
-//                                } else if (delay < -1) {
-//                                    orarioFinale += "  (" + delay + " min)";
-//                                } else {
-//                                    orarioFinale += "  (puntuale)";
-//                                }
-//                            }
-//                        } catch (Exception e) {
-//                            System.err.println("Errore realtime: " + e.getMessage());
-//                        }
-//                    }
-//
-//                    righe.add(new String[]{nomeLinea, direzione, orarioFinale});
-//                }
-//
-//            }
-      //  }
-        //  Precarica tutti i ritardi una sola volta (fuori dal ciclo)
-        Map<String, Integer> ritardi = null;
-        if (service.ConnectivityService.isOnline()) {
-            try {
-                ritardi = GtfsRealtimeTripUpdatesService.getRealtimeDelays();
-            } catch (Exception e) {
-                System.err.println("Errore realtime (preload): " + e.getMessage());
-            }
-        }
 
         List<StopTime> fermataStops = stopTimePerFermata.get(fermata.getStopId());
         if (fermataStops != null) {
@@ -582,24 +573,8 @@ public class SearchResultsPanel extends JPanel {
                     String capolineaNome = capolineaPerTrip.getOrDefault(trip.getTripId(), "?");
                     String direzione = " → " + capolineaNome;
 
-                    // Orario statico base
-                    String orarioFinale = orarioFormattato;
-
-                    // Applica il ritardo (solo se la mappa ritardi è disponibile)
-                    if (ritardi != null) {
-                        Integer delay = ritardi.get(fermata.getStopId());
-                        if (delay != null) {
-                            if (delay > 1) {
-                                orarioFinale += "  (+" + delay + " min)";
-                            } else if (delay < -1) {
-                                orarioFinale += "  (" + delay + " min)";
-                            } else {
-                                orarioFinale += "  (puntuale)";
-                            }
-                        }
-                    }
-
-                    righe.add(new String[]{nomeLinea, direzione, orarioFinale});
+                    // Solo orario statico programmato
+                    righe.add(new String[]{nomeLinea, direzione, orarioFormattato});
                 }
             }
         }
@@ -613,59 +588,19 @@ public class SearchResultsPanel extends JPanel {
             noResult.setForeground(Color.DARK_GRAY);
             resultsContainer.add(Box.createVerticalStrut(10));
             resultsContainer.add(noResult);
-//        } else {
-//            String[][] data = righe.toArray(new String[0][]);
-////            JTable tabella = new JTable(data, colonne) {
-////                @Override
-////                public boolean isCellEditable(int row, int column) {
-////                    return false;
-////                }
-////            };
-//            JTable tabella = new JTable(data, colonne) {
-//                @Override
-//                public boolean isCellEditable(int row, int column) {
-//                    return false;
-//                }
-//
-//                @Override
-//                public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
-//                    Component c = super.prepareRenderer(renderer, row, column);
-//
-//                    if (column == 2) { // colonna orario
-//                        String testo = getValueAt(row, column).toString();
-//                        if (testo.contains("+")) c.setForeground(new Color(200, 0, 0));       // rosso ritardo
-//                        else if (testo.contains("-")) c.setForeground(new Color(0, 150, 255)); // blu anticipo
-//                        else if (testo.contains("puntuale")) c.setForeground(new Color(0, 160, 0)); // verde
-//                        else c.setForeground(Color.BLACK);
-//                    } else {
-//                        c.setForeground(Color.BLACK);
-//                    }
-//
-//                    return c;
-//                }
-//            };
-//
-//            tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-//            tabella.setRowHeight(22);
-//            tabella.getColumnModel().getColumn(0).setPreferredWidth(50);
-//            tabella.getColumnModel().getColumn(1).setPreferredWidth(230);
-//            tabella.getColumnModel().getColumn(2).setPreferredWidth(80);
-//
-//            JScrollPane scroll = new JScrollPane(tabella);
-//            scroll.setPreferredSize(new Dimension(380, 500));
-//            resultsContainer.add(scroll);
-//        }
         } else {
             // Se arrivo da "LINEA" → mostro solo la colonna Orario arrivo
             String[] colonne;
-            String[][] data;
+            Object[][] data;
 
             if ("LINEA".equalsIgnoreCase(contesto)) {
-                colonne = new String[]{"Orario arrivo"};
+                colonne = new String[]{"Orario arrivo", "Stato"};
+                data = new Object[righe.size()][2];
 
-                data = new String[righe.size()][1];
+
                 for (int i = 0; i < righe.size(); i++) {
                     data[i][0] = righe.get(i)[2]; // solo orario
+                    data[i][1] = "";
                 }
 
                 // ───────────────────────────────
@@ -696,8 +631,15 @@ public class SearchResultsPanel extends JPanel {
 
             } else {
                 // caso normale (ricerca fermata) → mostro anche la linea e la direzione
-                colonne = new String[]{"Linea", "Direzione", "Orario arrivo"};
-                data = righe.toArray(new String[0][]);
+                colonne = new String[]{"Linea", "Direzione", "Orario", "Stato"};
+                data = new Object[righe.size()][4];
+
+                for (int i = 0; i < righe.size(); i++) {
+                    data[i][0] = righe.get(i)[0]; // linea
+                    data[i][1] = righe.get(i)[1]; // direzione
+                    data[i][2] = righe.get(i)[2]; // orario
+                    data[i][3] = ""; // placeholder per badge
+                }
             }
 
             JTable tabella = new JTable(data, colonne) {
@@ -709,36 +651,45 @@ public class SearchResultsPanel extends JPanel {
                 @Override
                 public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
                     Component c = super.prepareRenderer(renderer, row, column);
+                    // Colonna "Stato" → mostra DelayBadge
+                    int statoColumn = ("LINEA".equalsIgnoreCase(contesto)) ? 1 : 3;
 
-                    int colOrario = colonne.length == 3 ? 2 : 0; // ultima colonna in entrambi i casi
+                    if (column == statoColumn) {
+                        String orario = ("LINEA".equalsIgnoreCase(contesto))
+                                ? (String) data[row][0]
+                                : (String) data[row][2];
 
-                    if (column == colOrario) {
-                        String testo = getValueAt(row, column).toString();
-                        if (testo.contains("+")) c.setForeground(new Color(200, 0, 0));       // rosso ritardo
-                        else if (testo.contains("-")) c.setForeground(new Color(0, 150, 255)); // blu anticipo
-                        else if (testo.contains("puntuale")) c.setForeground(new Color(0, 160, 0)); // verde
-                        else c.setForeground(Color.BLACK);
-                    } else {
-                        c.setForeground(Color.BLACK);
+                        DelayBadge badge = delayBadgesMap.get(orario);
+                        if (badge != null) {
+                            return badge;
+                        } else {
+                            return DelayBadge.createLoadingBadge();
+                        }
                     }
+                    c.setForeground(Color.BLACK);
                     return c;
                 }
             };
 
             tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tabella.setRowHeight(22);
-
-            if (colonne.length == 3) {
+            tabella.setRowHeight(30);
+            this.currentTable = tabella;
+            if (colonne.length == 4) {
                 tabella.getColumnModel().getColumn(0).setPreferredWidth(50);
-                tabella.getColumnModel().getColumn(1).setPreferredWidth(230);
-                tabella.getColumnModel().getColumn(2).setPreferredWidth(80);
+                tabella.getColumnModel().getColumn(1).setPreferredWidth(180);
+                tabella.getColumnModel().getColumn(2).setPreferredWidth(70);
+                tabella.getColumnModel().getColumn(3).setPreferredWidth(80);
             } else {
                 tabella.getColumnModel().getColumn(0).setPreferredWidth(150);
+                tabella.getColumnModel().getColumn(1).setPreferredWidth(100);
             }
 
             JScrollPane scroll = new JScrollPane(tabella);
             scroll.setPreferredSize(new Dimension(380, 500));
             resultsContainer.add(scroll);
+
+            caricaDelayInfoPerFermata(fermata, stopTimes, trips, rotte, righe, contesto);
+
         }
 
         JButton backBtn = new JButton("← Torna alle fermate della linea");
@@ -872,7 +823,7 @@ public class SearchResultsPanel extends JPanel {
         } else {
             JTable tabella = new JTable(righe.toArray(new String[0][]), colonne);
             tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tabella.setRowHeight(22);
+            tabella.setRowHeight(30);
             tabella.setEnabled(true);
 
             tabella.addMouseListener(new MouseAdapter() {
@@ -990,4 +941,86 @@ public class SearchResultsPanel extends JPanel {
         this.onCloseListener = listener;
 
     }
+    /**
+     * Carica i DelayInfo in background e aggiorna i badge
+     */
+    private void caricaDelayInfoPerFermata(Fermate fermata,
+                                           List<StopTime> stopTimes,
+                                           List<Trip> trips,
+                                           List<Route> rotte,
+                                           List<String[]> righe,
+                                           String contesto) {
+
+        if (busTrackingService == null) {
+            System.out.println("[SearchResultsPanel] BusTrackingService non disponibile");
+            return;
+        }
+
+        if (!ConnectivityService.isOnline()) {
+            System.out.println("[SearchResultsPanel] Offline - nessun delay disponibile");
+            return;
+        }
+
+        SwingWorker<List<DelayInfo>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<DelayInfo> doInBackground() {
+                return busTrackingService.getDelayInfoForStop(fermata.getStopId(), 20);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<DelayInfo> delayInfos = get();
+
+                    Map<String, DelayInfo> delayMap = new HashMap<>();
+                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+
+                    for (DelayInfo info : delayInfos) {
+                        String orario = info.getScheduledTime().format(fmt);
+                        delayMap.put(orario, info);
+                        System.out.println("[DEBUG] DelayInfo: " + orario +
+                                " | Status: " + info.getStatus() +
+                                " | Delay: " + info.getDelayMinutes() + " min");
+                    }
+
+                    System.out.println("[DEBUG] Orari nella tabella:");
+                    for (String[] riga : righe) {
+                        String orario = ("LINEA".equalsIgnoreCase(contesto)) ? riga[0] : riga[2];
+                        System.out.println("[DEBUG]   - " + orario);
+
+                    }
+
+                    for (String[] riga : righe) {
+                        String orario = ("LINEA".equalsIgnoreCase(contesto)) ? riga[0] : riga[2];
+
+                        DelayInfo delayInfo = delayMap.get(orario);
+                        DelayBadge badge;
+
+                        if (delayInfo != null) {
+                            badge = new DelayBadge(delayInfo);
+                        } else {
+                            badge = DelayBadge.createNoDataBadge();
+                        }
+
+                        delayBadgesMap.put(orario, badge);
+                    }
+                    if (currentTable != null) {
+                        currentTable.repaint();
+                        System.out.println("[SearchResultsPanel] ✓ Tabella aggiornata con " + delayBadgesMap.size() + " badge");
+                    }
+                    resultsContainer.revalidate();
+                    resultsContainer.repaint();
+
+                    System.out.println("[SearchResultsPanel] ✓ Caricati " + delayInfos.size() + " delay info");
+
+                } catch (Exception e) {
+                    System.err.println("[SearchResultsPanel] Errore caricamento delay: " + e.getMessage());
+                }
+            }
+        };
+
+        worker.execute();
+    }
 }
+
+

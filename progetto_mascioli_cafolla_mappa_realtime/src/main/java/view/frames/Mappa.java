@@ -145,8 +145,12 @@ public class Mappa extends JFrame {
                 rotte,
                 trips,
                 stopTimes,
-                forme
+                forme,
+                gtfsService
         );
+
+        resultsPanel.setBusTrackingService(mapController.getBusTrackingService());
+        System.out.println("[Mappa] BusTrackingService collegato al SearchResultsPanel");
 
         // Configura i pannelli con i drawer
         resultsPanel.setRouteDrawer(routeDrawer, forme);
@@ -184,7 +188,7 @@ public class Mappa extends JFrame {
 
         // Final UI setup
         add(layeredPane, BorderLayout.CENTER);
-        setVisible(true);
+        setVisible(false); // visibility controlled by launcher/splash flow
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
