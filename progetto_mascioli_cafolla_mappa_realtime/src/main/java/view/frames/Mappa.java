@@ -18,6 +18,7 @@ import java.util.Collections;
 //import classi
 import service.MapService;
 import service.GtfsService;
+import service.RealTimeDelayService;
 import controller.MapController;
 import view.map.BusWaypoint;
 import view.map.RouteDrawer;
@@ -54,6 +55,7 @@ public class Mappa extends JFrame {
     private WaypointDrawer waypointDrawer;
     private MapService mapService;
     private MapController mapController;
+    private RealTimeDelayService delayService;
     
     public Mappa() {
         super("Roma Bus Tracker");
@@ -145,12 +147,20 @@ public class Mappa extends JFrame {
                 rotte,
                 trips,
                 stopTimes,
-                forme,
-                gtfsService
-        );
+                forme
 
-        resultsPanel.setBusTrackingService(mapController.getBusTrackingService());
-        System.out.println("[Mappa] BusTrackingService collegato al SearchResultsPanel");
+        );
+        // ⭐ INIZIALIZZAZIONE SERVIZIO RITARDI REAL-TIME
+        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("Inizializzazione servizio ritardi real-time...");
+        System.out.println("═══════════════════════════════════════════════");
+        delayService = new RealTimeDelayService(trips, rotte, stopTimes);
+
+        // ⭐ PASSA IL SERVIZIO AL PANNELLO RISULTATI
+        resultsPanel.setDelayService(delayService);
+        System.out.println("✓ Servizio ritardi collegato al pannello risultati");
+        System.out.println("═══════════════════════════════════════════════");
+
 
         // Configura i pannelli con i drawer
         resultsPanel.setRouteDrawer(routeDrawer, forme);
@@ -188,7 +198,7 @@ public class Mappa extends JFrame {
 
         // Final UI setup
         add(layeredPane, BorderLayout.CENTER);
-        setVisible(false); // visibility controlled by launcher/splash flow
+        setVisible(true);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 

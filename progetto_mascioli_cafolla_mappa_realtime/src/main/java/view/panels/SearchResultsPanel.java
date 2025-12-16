@@ -9,22 +9,14 @@ import org.jxmapviewer.viewer.GeoPosition;
 import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
-
-
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-
-import model.realtime.*;
-import service.BusTrackingService;
-import service.ConnectivityService;
-import view.components.DelayBadge;
 
 public class SearchResultsPanel extends JPanel {
     private JPanel resultsContainer;
@@ -33,18 +25,14 @@ public class SearchResultsPanel extends JPanel {
     // METODO MOSTRA FERMATE INDIETRO
     private java.util.List<Fermate> ultimeFermate = new java.util.ArrayList<>();
     private java.util.List<Route> ultimeRotte = new java.util.ArrayList<>();
-
     private boolean ripristinando = false;
-
     private String currentTheme = "Blu";
-    private BusTrackingService busTrackingService;
-    private Map<String, DelayBadge> delayBadgesMap;
     private JButton closeButton;
     private java.util.function.Consumer<Void> onCloseListener;
-    private JTable currentTable;
 
     private java.util.function.Consumer<Fermate> onStopClickListener; // listener per fermate
     private java.util.function.Consumer<Route> onRouteClickListener; // listener per rotte
+
 
     // listener per click su fermata nella lista linea
     private java.util.function.Consumer<Fermate> onLineaStopClickListener;
@@ -60,57 +48,17 @@ public class SearchResultsPanel extends JPanel {
     private List<Route> tutteLeRotte;
     private List<Trip> tuttiITrips;
     private List<StopTime> tuttiGliStopTimes;
+    private service.RealTimeDelayService delayService;
 
     public SearchResultsPanel() {
         results = new ArrayList<>();
-        delayBadgesMap = new HashMap<>();
         initializeUI();
-    }
-
-    /**
-     * Imposta il BusTrackingService
-     */
-    public void setBusTrackingService(BusTrackingService service) {
-        this.busTrackingService = service;
-    }
-
-    /**
-     * Aggiorna tutti i badge di ritardo visualizzati
-     */
-    public void aggiornaDelayInfo(BusTrackingService trackingService) {
-        if (trackingService == null || delayBadgesMap.isEmpty()) {
-            return;
+        }
+        public void setDelayService(service.RealTimeDelayService service) {
+            this.delayService = service;
         }
 
-        System.out.println("[SearchResultsPanel] Aggiornamento " + delayBadgesMap.size() + " badge ritardo...");
 
-        for (Map.Entry<String, DelayBadge> entry : delayBadgesMap.entrySet()) {
-            DelayBadge badge = entry.getValue();
-            DelayInfo oldInfo = badge.getDelayInfo();
-
-            if (oldInfo != null) {
-                List<DelayInfo> newInfos = trackingService.getDelayInfoForStop(
-                        oldInfo.getStopId(), 20
-                );
-
-                for (DelayInfo newInfo : newInfos) {
-                    if (newInfo.getTripId().equals(oldInfo.getTripId()) &&
-                            newInfo.getScheduledTime().equals(oldInfo.getScheduledTime())) {
-                        badge.setDelayInfo(newInfo);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (currentTable != null) {
-            currentTable.repaint();
-        }
-        resultsContainer.revalidate();
-        resultsContainer.repaint();
-
-        System.out.println("[SearchResultsPanel] ✓ Badge aggiornati");
-    }
 
 
 
@@ -423,7 +371,23 @@ public class SearchResultsPanel extends JPanel {
             void onClick();
         }
     }
+    private static class OrarioRow {
+        String nomeLinea;
+        String direzione;
+        String orarioFormattato;
+        String tripId;  // ⭐ CHIAVE per matching real-time
 
+        OrarioRow(String nomeLinea, String direzione, String orarioFormattato, String tripId) {
+            this.nomeLinea = nomeLinea;
+            this.direzione = direzione;
+            this.orarioFormattato = orarioFormattato;
+            this.tripId = tripId;
+        }
+
+        String[] toArray() {
+            return new String[]{nomeLinea, direzione, orarioFormattato};
+        }
+    }
     // metodo per mostrare le fermate
     public void mostraOrariFermata(Fermate fermata,
                                    List<StopTime> stopTimes,
@@ -434,8 +398,6 @@ public class SearchResultsPanel extends JPanel {
                                    Trip direzioneCorrente,
                                    String contesto) {
         clearResults();
-        delayBadgesMap.clear();
-
 
         // Mappe hash per lookups O(1)
         Map<String, Trip> tripMap = new HashMap<>(trips.size());
@@ -450,8 +412,10 @@ public class SearchResultsPanel extends JPanel {
         Map<String, List<StopTime>> stopTimePerFermata = new HashMap<>();
         Map<String, StopTime> ultimoStopPerTrip = new HashMap<>();
 
-        LocalTime oraCorrente = LocalTime.now();
-        LocalTime oraMax = oraCorrente.plusMinutes(40);
+        LocalTime oraCorrente = LocalTime.now().minusMinutes(5); // ⭐ Include bus in ritardo
+        LocalTime oraMax = oraCorrente.plusMinutes(65); // ⭐ Finestra 60 min effettivi (5 passati + 60 futuri)
+
+
 
         for (StopTime st : stopTimes) {
             stopTimePerFermata.computeIfAbsent(st.getStopId(), k -> new ArrayList<>()).add(st);
@@ -463,7 +427,7 @@ public class SearchResultsPanel extends JPanel {
             }
         }
 
-        //PRE-CALCOLO CAPOLINEA
+        // PRE-CALCOLO CAPOLINEA
         Map<String, String> capolineaPerTrip = new HashMap<>();
         for (Map.Entry<String, StopTime> entry : ultimoStopPerTrip.entrySet()) {
             Fermate capolinea = fermatePerId.get(entry.getValue().getStopId());
@@ -497,7 +461,6 @@ public class SearchResultsPanel extends JPanel {
             }
         }
 
-        // ───────────────────────
         // Titolo + bottone preferiti
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         topPanel.setOpaque(false);
@@ -530,23 +493,20 @@ public class SearchResultsPanel extends JPanel {
         topPanel.add(favBtn);
         resultsContainer.add(topPanel);
 
-
-    // Posizionamento manuale dell'ID
-        JPanel idPanel = new JPanel(null); // layout nullo per poter usare setBounds
+        // Posizionamento manuale dell'ID
+        JPanel idPanel = new JPanel(null);
         idPanel.setOpaque(false);
-        idPanel.setPreferredSize(new Dimension(400, 25)); // altezza fissa per ID
+        idPanel.setPreferredSize(new Dimension(400, 25));
 
         JLabel idLabel = new JLabel("ID: " + fermata.getStopId());
         idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         idPanel.add(idLabel);
-
-    // regolare  posizione e dimensioni
         idLabel.setBounds(160, 0, 200, 20);
 
         resultsContainer.add(idPanel);
 
         // RACCOLTA DATI - Unico loop ottimizzato
-        List<String[]> righe = new ArrayList<>();
+        List<OrarioRow> righe = new ArrayList<>();
         Set<String> orariGiaAggiunti = new HashSet<>();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -566,46 +526,111 @@ public class SearchResultsPanel extends JPanel {
 
                 String nomeLinea = route.getRouteShortName();
                 String orarioFormattato = arrivo.format(fmt);
-                String chiave = nomeLinea + "|" + orarioFormattato;
+                String tripId = st.getTripId();
+                String chiave = nomeLinea + "|" + orarioFormattato + "|" + tripId;
 
-                // Evita duplicati
                 if (orariGiaAggiunti.add(chiave)) {
-                    String capolineaNome = capolineaPerTrip.getOrDefault(trip.getTripId(), "?");
+                    String capolineaNome = capolineaPerTrip.getOrDefault(tripId, "?");
                     String direzione = " → " + capolineaNome;
-
-                    // Solo orario statico programmato
-                    righe.add(new String[]{nomeLinea, direzione, orarioFormattato});
+                    righe.add(new OrarioRow(nomeLinea, direzione, orarioFormattato, tripId));
                 }
             }
         }
 
+        // ⭐ CARICA RITARDI REAL-TIME
+        List<OrarioRow> righeConRT = new ArrayList<>();
 
-        righe.sort(Comparator.comparing(arr -> arr[2]));
+        if (delayService != null && service.ConnectivityService.isOnline()) {
+            try {
+                System.out.println("═══════════════════════════════════════════════");
+                System.out.println("[SearchResultsPanel] Richiesta ritardi per fermata: " + fermata.getStopId());
 
-        if (righe.isEmpty()) {
+                Map<String, Integer> delaysByLineaOrario = delayService.getDelaysByTripId(fermata.getStopId());
+                System.out.println("[SearchResultsPanel] Ritardi ricevuti per " + delaysByLineaOrario.size() + " combinazioni");
+
+                // ⭐ FILTRA: Tieni SOLO le righe con dati RT
+                for (OrarioRow riga : righe) {
+                    String chiaveRT = riga.nomeLinea + "#" + riga.orarioFormattato;
+                    Integer delaySeconds = delaysByLineaOrario.get(chiaveRT);
+
+                    if (delaySeconds != null) {
+                        int minutes = delaySeconds / 60;
+
+                        if (Math.abs(minutes) > 1) {
+                            if (minutes > 0) {
+                                riga.orarioFormattato = riga.orarioFormattato + "  (+" + minutes + " min)";
+                            } else {
+                                riga.orarioFormattato = riga.orarioFormattato + "  (" + minutes + " min)";
+                            }
+                        } else {
+                            riga.orarioFormattato = riga.orarioFormattato + "  (On Time)";
+                        }
+
+                        righeConRT.add(riga);
+                        System.out.println("[SearchResultsPanel] ✓ Linea " + riga.nomeLinea + " orario " + riga.orarioFormattato);
+                    }
+                }
+
+                System.out.println("═══════════════════════════════════════════════");
+
+            } catch (Exception e) {
+                System.err.println("[SearchResultsPanel] ✗ Errore caricamento ritardi: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // ⭐ DECISIONE: Mostra RT se disponibili, altrimenti fallback a statico
+        // ⭐ DECISIONE: Mostra RT se disponibili, altrimenti fallback a statico
+        List<OrarioRow> righeDaMostrare;
+
+        if (!righeConRT.isEmpty()) {
+            // ⭐ RIMUOVI DUPLICATI: Una sola riga per linea+orario
+            Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
+            for (OrarioRow riga : righeConRT) {
+                String chiaveUnica = riga.nomeLinea + "#" + riga.orarioFormattato;
+                mappaUnica.putIfAbsent(chiaveUnica, riga); // Tiene solo la prima
+            }
+            righeDaMostrare = new ArrayList<>(mappaUnica.values());
+            System.out.println("[SearchResultsPanel] ✓ Mostrando " + righeDaMostrare.size() + " linee REAL-TIME (rimosse " + (righeConRT.size() - righeDaMostrare.size()) + " duplicati)");
+        } else {
+            // ⭐ Anche per lo statico: rimuovi duplicati linea+orario
+            Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
+            for (OrarioRow riga : righe) {
+                String chiaveUnica = riga.nomeLinea + "#" + riga.orarioFormattato.replaceAll("\\s*\\([^)]*\\)", ""); // Rimuove eventuali suffix tipo "(+5 min)"
+                mappaUnica.putIfAbsent(chiaveUnica, riga);
+            }
+            righeDaMostrare = new ArrayList<>(mappaUnica.values());
+            System.out.println("[SearchResultsPanel] ⚠ Nessun dato RT, mostrando " + righeDaMostrare.size() + " orari statici (rimosse " + (righe.size() - righeDaMostrare.size()) + " duplicati)");
+        }
+
+
+        // ⭐ Converti in String[] per la tabella
+        List<String[]> righeTabella = righeDaMostrare.stream()
+                .map(OrarioRow::toArray)
+                .collect(java.util.stream.Collectors.toList());
+
+        righeTabella.sort(Comparator.comparing(arr -> arr[2]));
+
+        if (righeTabella.isEmpty()) {
             JLabel noResult = new JLabel("Nessun arrivo nei prossimi 40 minuti.", SwingConstants.CENTER);
             noResult.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noResult.setForeground(Color.DARK_GRAY);
             resultsContainer.add(Box.createVerticalStrut(10));
             resultsContainer.add(noResult);
+
         } else {
-            // Se arrivo da "LINEA" → mostro solo la colonna Orario arrivo
+            // ⭐ Se arrivo da "LINEA" → mostro solo la colonna Orario arrivo
             String[] colonne;
-            Object[][] data;
+            String[][] data;
 
             if ("LINEA".equalsIgnoreCase(contesto)) {
-                colonne = new String[]{"Orario arrivo", "Stato"};
-                data = new Object[righe.size()][2];
-
-
-                for (int i = 0; i < righe.size(); i++) {
-                    data[i][0] = righe.get(i)[2]; // solo orario
-                    data[i][1] = "";
+                colonne = new String[]{"Orario arrivo"};
+                data = new String[righeTabella.size()][1];
+                for (int i = 0; i < righeTabella.size(); i++) {
+                    data[i][0] = righeTabella.get(i)[2]; // solo orario
                 }
 
-                // ───────────────────────────────
                 // Mostra intestazione con linea + direzione
-                // ───────────────────────────────
                 if (rottaCorrente != null && direzioneCorrente != null) {
                     JLabel infoLinea = new JLabel(
                             "Linea " + rottaCorrente.getRouteShortName() +
@@ -615,31 +640,19 @@ public class SearchResultsPanel extends JPanel {
                     infoLinea.setFont(new Font("Segoe UI", Font.BOLD, 14));
                     infoLinea.setForeground(new Color(50, 50, 50));
 
-                    // Posizionamento manuale label linea
-
-                    JPanel lineaPanel = new JPanel(null); // layout nullo per posizionamento manuale
+                    JPanel lineaPanel = new JPanel(null);
                     lineaPanel.setOpaque(false);
-                    lineaPanel.setPreferredSize(new Dimension(400, 40)); // altezza area dove la metti
+                    lineaPanel.setPreferredSize(new Dimension(400, 40));
                     lineaPanel.add(infoLinea);
-
-                    // scegli tu le coordinate (x, y, larghezza, altezza)
                     infoLinea.setBounds(80, 10, 200, 25);
 
                     resultsContainer.add(lineaPanel);
-
                 }
 
             } else {
-                // caso normale (ricerca fermata) → mostro anche la linea e la direzione
-                colonne = new String[]{"Linea", "Direzione", "Orario", "Stato"};
-                data = new Object[righe.size()][4];
-
-                for (int i = 0; i < righe.size(); i++) {
-                    data[i][0] = righe.get(i)[0]; // linea
-                    data[i][1] = righe.get(i)[1]; // direzione
-                    data[i][2] = righe.get(i)[2]; // orario
-                    data[i][3] = ""; // placeholder per badge
-                }
+                // Caso normale (ricerca fermata)
+                colonne = new String[]{"Linea", "Direzione", "Orario arrivo"};
+                data = righeTabella.toArray(new String[0][]);
             }
 
             JTable tabella = new JTable(data, colonne) {
@@ -651,74 +664,82 @@ public class SearchResultsPanel extends JPanel {
                 @Override
                 public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
                     Component c = super.prepareRenderer(renderer, row, column);
-                    // Colonna "Stato" → mostra DelayBadge
-                    int statoColumn = ("LINEA".equalsIgnoreCase(contesto)) ? 1 : 3;
 
-                    if (column == statoColumn) {
-                        String orario = ("LINEA".equalsIgnoreCase(contesto))
-                                ? (String) data[row][0]
-                                : (String) data[row][2];
+                    int colOrario = colonne.length == 3 ? 2 : 0;
 
-                        DelayBadge badge = delayBadgesMap.get(orario);
-                        if (badge != null) {
-                            return badge;
-                        } else {
-                            return DelayBadge.createLoadingBadge();
-                        }
+                    if (column == colOrario) {
+                        String testo = getValueAt(row, column).toString();
+                        if (testo.contains("+")) c.setForeground(new Color(200, 0, 0));
+                        else if (testo.contains("-")) c.setForeground(new Color(0, 150, 255));
+                        else if (testo.contains("On Time")) c.setForeground(new Color(0, 160, 0));
+                        else c.setForeground(Color.BLACK);
+                    } else {
+                        c.setForeground(Color.BLACK);
                     }
-                    c.setForeground(Color.BLACK);
                     return c;
                 }
             };
 
             tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tabella.setRowHeight(30);
-            this.currentTable = tabella;
-            if (colonne.length == 4) {
+            tabella.setRowHeight(22);
+
+            if (colonne.length == 3) {
                 tabella.getColumnModel().getColumn(0).setPreferredWidth(50);
-                tabella.getColumnModel().getColumn(1).setPreferredWidth(180);
-                tabella.getColumnModel().getColumn(2).setPreferredWidth(70);
-                tabella.getColumnModel().getColumn(3).setPreferredWidth(80);
+                tabella.getColumnModel().getColumn(1).setPreferredWidth(230);
+                tabella.getColumnModel().getColumn(2).setPreferredWidth(80);
             } else {
                 tabella.getColumnModel().getColumn(0).setPreferredWidth(150);
-                tabella.getColumnModel().getColumn(1).setPreferredWidth(100);
             }
 
             JScrollPane scroll = new JScrollPane(tabella);
             scroll.setPreferredSize(new Dimension(380, 500));
             resultsContainer.add(scroll);
-
-            caricaDelayInfoPerFermata(fermata, stopTimes, trips, rotte, righe, contesto);
-
         }
 
-        JButton backBtn = new JButton("← Torna alle fermate della linea");
-        backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        backBtn.addActionListener(e -> {
-            clearResults();
-            ripristinando = true;
-
-            if (rottaCorrente != null && direzioneCorrente != null) {
-                // Ritorna alla lista fermate della linea
-                mostraFermateLinea(
-                        rottaCorrente,
-                        direzioneCorrente,
-                        tuttiITrips,
-                        tuttiGliStopTimes,
-                        tutteLeFermate
-                );
-            } else {
-                // fallback di sicurezza
-                aggiornaRisultati(ultimeFermate);
-            }
-        });
-        resultsContainer.add(backBtn);
-
+        // ⭐ BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
+        if ("LINEA".equalsIgnoreCase(contesto) && rottaCorrente != null && direzioneCorrente != null) {
+            JButton backBtn = new JButton("← Torna alle fermate della linea");
+            backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            backBtn.addActionListener(e -> {
+                clearResults();
+                ripristinando = true;
+                mostraFermateLinea(rottaCorrente, direzioneCorrente, tuttiITrips, tuttiGliStopTimes, tutteLeFermate);
+            });
+            resultsContainer.add(backBtn);
+        }
 
         resultsContainer.revalidate();
         resultsContainer.repaint();
     }
 
+
+    // Aggiorna il pannello "I Miei Preferiti" nel frame principale
+    private void aggiornaPannelloPreferiti(String username) {
+        if (username == null || username.isEmpty()) return;
+
+        SwingUtilities.invokeLater(() -> {
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (!(window instanceof JFrame frame)) return;
+
+            Container content = frame.getContentPane();
+            for (Component comp : content.getComponents()) {
+                if (comp instanceof JLayeredPane lp) {
+                    for (Component sub : lp.getComponents()) {
+                        if (sub instanceof FavoritesPanel favPanel) {
+                            favPanel.caricaPreferiti(username);
+                            System.out.println(" Preferiti aggiornati per " + username);
+                            return;
+                        }
+                    }
+                }
+            }
+        });
+
+    }
+    public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
+        this.onCloseListener = listener;
+
+    }
     public void mostraFermateLinea(Route rotta,
                                    Trip direzioneScelta,
                                    List<Trip> tuttiTrips,
@@ -760,7 +781,6 @@ public class SearchResultsPanel extends JPanel {
             }
         }
 
-        // ───────────────────────
         // Titolo + bottone preferiti
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         topPanel.setOpaque(false);
@@ -823,7 +843,7 @@ public class SearchResultsPanel extends JPanel {
         } else {
             JTable tabella = new JTable(righe.toArray(new String[0][]), colonne);
             tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tabella.setRowHeight(30);
+            tabella.setRowHeight(22);
             tabella.setEnabled(true);
 
             tabella.addMouseListener(new MouseAdapter() {
@@ -851,19 +871,17 @@ public class SearchResultsPanel extends JPanel {
             JScrollPane scroll = new JScrollPane(tabella);
             scroll.setPreferredSize(new Dimension(380, 500));
             resultsContainer.add(scroll);
-            // Quando clicchi su una fermata nella lista della linea,
-// mostra SOLO gli orari relativi a quella fermata e a quella linea
-            // Versione ottimizzata: nessun ciclo inutile
+
+            // ⭐ LISTENER: Quando clicchi su una fermata nella lista della linea
             setOnLineaStopClickListener(fermata -> {
-                //  Prepara mappe statiche solo se non già costruite
-                Map<String, Trip> tripMap = new HashMap<>(tuttiTrips.size());
-                for (Trip t : tuttiTrips) {
+                Map<String, Trip> tripMap = new HashMap<>(tuttiITrips.size());
+                for (Trip t : tuttiITrips) {
                     tripMap.put(t.getTripId(), t);
                 }
 
-                // Filtra gli stopTimes una sola volta con lookup diretto
+                // Filtra stopTimes per fermata e linea corrente
                 List<StopTime> stopTimesLineaEFermata = new ArrayList<>();
-                for (StopTime st : stopTimes) {
+                for (StopTime st : tuttiGliStopTimes) {
                     if (!st.getStopId().equals(fermata.getStopId())) continue;
 
                     Trip trip = tripMap.get(st.getTripId());
@@ -872,19 +890,18 @@ public class SearchResultsPanel extends JPanel {
                     }
                 }
 
-                // Mostra solo gli orari relativi alla fermata e linea corrente
+                // Mostra orari per quella fermata + linea
                 mostraOrariFermata(
                         fermata,
                         stopTimesLineaEFermata,
-                        tuttiTrips,
+                        tuttiITrips,
                         List.of(rotta),
                         tutteLeFermate,
-                        rotta,              // serve per il "torna alla linea"
+                        rotta,
                         direzioneScelta,
                         "LINEA"
                 );
             });
-
         }
 
         JButton backBtn = new JButton("← Torna alle linee");
@@ -914,113 +931,4 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.repaint();
     }
 
-    // Aggiorna il pannello "I Miei Preferiti" nel frame principale
-    private void aggiornaPannelloPreferiti(String username) {
-        if (username == null || username.isEmpty()) return;
-
-        SwingUtilities.invokeLater(() -> {
-            Window window = SwingUtilities.getWindowAncestor(this);
-            if (!(window instanceof JFrame frame)) return;
-
-            Container content = frame.getContentPane();
-            for (Component comp : content.getComponents()) {
-                if (comp instanceof JLayeredPane lp) {
-                    for (Component sub : lp.getComponents()) {
-                        if (sub instanceof FavoritesPanel favPanel) {
-                            favPanel.caricaPreferiti(username);
-                            System.out.println(" Preferiti aggiornati per " + username);
-                            return;
-                        }
-                    }
-                }
-            }
-        });
-
-    }
-    public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
-        this.onCloseListener = listener;
-
-    }
-    /**
-     * Carica i DelayInfo in background e aggiorna i badge
-     */
-    private void caricaDelayInfoPerFermata(Fermate fermata,
-                                           List<StopTime> stopTimes,
-                                           List<Trip> trips,
-                                           List<Route> rotte,
-                                           List<String[]> righe,
-                                           String contesto) {
-
-        if (busTrackingService == null) {
-            System.out.println("[SearchResultsPanel] BusTrackingService non disponibile");
-            return;
-        }
-
-        if (!ConnectivityService.isOnline()) {
-            System.out.println("[SearchResultsPanel] Offline - nessun delay disponibile");
-            return;
-        }
-
-        SwingWorker<List<DelayInfo>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<DelayInfo> doInBackground() {
-                return busTrackingService.getDelayInfoForStop(fermata.getStopId(), 20);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    List<DelayInfo> delayInfos = get();
-
-                    Map<String, DelayInfo> delayMap = new HashMap<>();
-                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
-
-                    for (DelayInfo info : delayInfos) {
-                        String orario = info.getScheduledTime().format(fmt);
-                        delayMap.put(orario, info);
-                        System.out.println("[DEBUG] DelayInfo: " + orario +
-                                " | Status: " + info.getStatus() +
-                                " | Delay: " + info.getDelayMinutes() + " min");
-                    }
-
-                    System.out.println("[DEBUG] Orari nella tabella:");
-                    for (String[] riga : righe) {
-                        String orario = ("LINEA".equalsIgnoreCase(contesto)) ? riga[0] : riga[2];
-                        System.out.println("[DEBUG]   - " + orario);
-
-                    }
-
-                    for (String[] riga : righe) {
-                        String orario = ("LINEA".equalsIgnoreCase(contesto)) ? riga[0] : riga[2];
-
-                        DelayInfo delayInfo = delayMap.get(orario);
-                        DelayBadge badge;
-
-                        if (delayInfo != null) {
-                            badge = new DelayBadge(delayInfo);
-                        } else {
-                            badge = DelayBadge.createNoDataBadge();
-                        }
-
-                        delayBadgesMap.put(orario, badge);
-                    }
-                    if (currentTable != null) {
-                        currentTable.repaint();
-                        System.out.println("[SearchResultsPanel] ✓ Tabella aggiornata con " + delayBadgesMap.size() + " badge");
-                    }
-                    resultsContainer.revalidate();
-                    resultsContainer.repaint();
-
-                    System.out.println("[SearchResultsPanel] ✓ Caricati " + delayInfos.size() + " delay info");
-
-                } catch (Exception e) {
-                    System.err.println("[SearchResultsPanel] Errore caricamento delay: " + e.getMessage());
-                }
-            }
-        };
-
-        worker.execute();
-    }
 }
-
-

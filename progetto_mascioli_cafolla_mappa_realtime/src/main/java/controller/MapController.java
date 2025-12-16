@@ -13,7 +13,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import javax.swing.Timer;
-import model.realtime.*;
+
 
 public class MapController {
 
@@ -35,9 +35,6 @@ public class MapController {
     // Timer per aggiornamento real-time
     private Timer realtimeBusTimer;
 
-    private BusTrackingService busTrackingService;
-    private Timer delayUpdateTimer;
-
     public MapController(JXMapViewer mapViewer,
                          MapService mapService,
                          RouteDrawer routeDrawer,
@@ -47,8 +44,7 @@ public class MapController {
                          List<Route> rotte,
                          List<Trip> trips,
                          List<StopTime> stopTimes,
-                         Map<String, ShapeRoute> forme,
-                         GtfsService gtfsService) {
+                         Map<String, ShapeRoute> forme) {
         this.mapViewer = mapViewer;
         this.mapService = mapService;
         this.routeDrawer = routeDrawer;
@@ -59,7 +55,6 @@ public class MapController {
         this.trips = trips;
         this.stopTimes = stopTimes;
         this.forme = forme;
-        this.busTrackingService = new BusTrackingService(gtfsService);
     }
 
     public void mostraLinea(Route rotta) {
@@ -191,7 +186,7 @@ public class MapController {
 
         // ⭐ AVVIA AGGIORNAMENTO REAL-TIME DEI BUS
         avviaAggiornamentoRealtimeBus(rotta, trip);
-        avviaAggiornamentoRitardi(rotta, trip);
+
     }
 
     /**
@@ -266,72 +261,6 @@ public class MapController {
         }
     }
 
-    // ==================== METODI PER TRACKING RITARDI ====================
-
-    /**
-     * Avvia l'aggiornamento periodico dei ritardi per la linea corrente
-     */
-    public void avviaAggiornamentoRitardi(Route rotta, Trip trip) {
-        fermaAggiornamentoRitardi();
-
-        if (!ConnectivityService.isOnline()) {
-            System.out.println("[MapController] Offline - aggiornamento ritardi disabilitato");
-            return;
-        }
-
-        System.out.println("[MapController] Avvio aggiornamento ritardi per " + rotta.getRouteShortName());
-
-        aggiornaRitardiLinea(rotta, trip);
-
-        delayUpdateTimer = new Timer(30000, e -> {
-            if (ConnectivityService.isOnline()) {
-                aggiornaRitardiLinea(rotta, trip);
-            } else {
-                System.out.println("[MapController] Connessione persa, skip aggiornamento ritardi");
-            }
-        });
-        delayUpdateTimer.start();
-    }
-
-    /**
-     * Aggiorna i dati di ritardo per la linea corrente
-     */
-    private void aggiornaRitardiLinea(Route rotta, Trip trip) {
-        System.out.println("[MapController] Aggiornamento ritardi in corso...");
-
-        busTrackingService.forceRefresh();
-
-        if (resultsPanel != null) {
-            resultsPanel.aggiornaDelayInfo(busTrackingService);
-        }
-
-        System.out.println("[MapController] ✓ Ritardi aggiornati");
-    }
-
-    /**
-     * Ferma l'aggiornamento ritardi
-     */
-    public void fermaAggiornamentoRitardi() {
-        if (delayUpdateTimer != null && delayUpdateTimer.isRunning()) {
-            delayUpdateTimer.stop();
-            System.out.println("[MapController] Timer ritardi fermato");
-        }
-    }
-
-    /**
-     * Ottiene il BusTrackingService
-     */
-    public BusTrackingService getBusTrackingService() {
-        return busTrackingService;
-    }
-
-    /**
-     * Ferma tutti i timer
-     */
-    public void stopAllTimers() {
-        fermaAggiornamentoRealtimeBus();
-        fermaAggiornamentoRitardi();
-    }
-}  // ← questa è l'ultima parentesi della classe
+}
 
 
