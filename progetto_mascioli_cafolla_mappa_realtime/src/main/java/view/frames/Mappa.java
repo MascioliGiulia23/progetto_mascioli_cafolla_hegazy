@@ -85,11 +85,11 @@ public class Mappa extends JFrame {
         layeredPane.add(mapViewer, JLayeredPane.DEFAULT_LAYER);
 
         searchBar = new SearchBar();
-        searchBar.setBounds(30, 30, 380, 55);
+        searchBar.setBounds(30, 30, 400, 60);
         layeredPane.add(searchBar, JLayeredPane.PALETTE_LAYER);
 
         resultsPanel = new SearchResultsPanel();
-        resultsPanel.setBounds(30, 100, 380, 660);
+        resultsPanel.setBounds(30, 100, 400, 600);
         resultsPanel.setVisible(false);
         layeredPane.add(resultsPanel, JLayeredPane.PALETTE_LAYER);
 

@@ -53,6 +53,7 @@ public class SearchResultsPanel extends JPanel {
     public SearchResultsPanel() {
         results = new ArrayList<>();
         initializeUI();
+        setPreferredSize(new Dimension(550, 600));
         }
         public void setDelayService(service.RealTimeDelayService service) {
             this.delayService = service;
@@ -94,7 +95,7 @@ public class SearchResultsPanel extends JPanel {
 
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 5, 10));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 3, 10));
 
         JLabel titleLabel = new JLabel("Risultati");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -462,10 +463,10 @@ public class SearchResultsPanel extends JPanel {
         }
 
         // Titolo + bottone preferiti
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 3));
         topPanel.setOpaque(false);
-        JLabel titolo = new JLabel("\"" + fermata.getStopName() + "\"");
-        titolo.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        JLabel titolo = new JLabel("\"" + fermata.getStopName() + "\" (ID: " + fermata.getStopId() + ")");
+        titolo.setFont(new Font("Segoe UI", Font.BOLD, 14));
         titolo.setOpaque(false);
 
         JButton favBtn = new JButton(" Preferiti");
@@ -494,16 +495,9 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.add(topPanel);
 
         // Posizionamento manuale dell'ID
-        JPanel idPanel = new JPanel(null);
-        idPanel.setOpaque(false);
-        idPanel.setPreferredSize(new Dimension(400, 25));
 
-        JLabel idLabel = new JLabel("ID: " + fermata.getStopId());
-        idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        idPanel.add(idLabel);
-        idLabel.setBounds(160, 0, 200, 20);
 
-        resultsContainer.add(idPanel);
+
 
         // RACCOLTA DATI - Unico loop ottimizzato
         List<OrarioRow> righe = new ArrayList<>();
@@ -610,16 +604,17 @@ public class SearchResultsPanel extends JPanel {
                 .collect(java.util.stream.Collectors.toList());
 
         righeTabella.sort(Comparator.comparing(arr -> arr[2]));
+        resultsContainer.add(Box.createVerticalStrut(-5));
 
         if (righeTabella.isEmpty()) {
             JLabel noResult = new JLabel("Nessun arrivo nei prossimi 40 minuti.", SwingConstants.CENTER);
             noResult.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noResult.setForeground(Color.DARK_GRAY);
-            resultsContainer.add(Box.createVerticalStrut(10));
+
             resultsContainer.add(noResult);
 
         } else {
-            // ⭐ Se arrivo da "LINEA" → mostro solo la colonna Orario arrivo
+            // Se arrivo da "LINEA" → mostro solo la colonna Orario arrivo
             String[] colonne;
             String[][] data;
 
@@ -642,9 +637,9 @@ public class SearchResultsPanel extends JPanel {
 
                     JPanel lineaPanel = new JPanel(null);
                     lineaPanel.setOpaque(false);
-                    lineaPanel.setPreferredSize(new Dimension(400, 40));
+                    lineaPanel.setPreferredSize(new Dimension(520, 25));
                     lineaPanel.add(infoLinea);
-                    infoLinea.setBounds(80, 10, 200, 25);
+                    infoLinea.setBounds(120, 10, 280, 25);
 
                     resultsContainer.add(lineaPanel);
                 }
@@ -684,19 +679,22 @@ public class SearchResultsPanel extends JPanel {
             tabella.setRowHeight(22);
 
             if (colonne.length == 3) {
-                tabella.getColumnModel().getColumn(0).setPreferredWidth(50);
-                tabella.getColumnModel().getColumn(1).setPreferredWidth(230);
-                tabella.getColumnModel().getColumn(2).setPreferredWidth(80);
+                tabella.getColumnModel().getColumn(0).setPreferredWidth(40);   // Linea (era 60)
+                tabella.getColumnModel().getColumn(1).setPreferredWidth(200);  // Direzione (era 310)
+                tabella.getColumnModel().getColumn(2).setPreferredWidth(100);  // Orario (era 150)
             } else {
-                tabella.getColumnModel().getColumn(0).setPreferredWidth(150);
+                tabella.getColumnModel().getColumn(0).setPreferredWidth(150);  // Solo orario (era 200)
             }
 
+
             JScrollPane scroll = new JScrollPane(tabella);
-            scroll.setPreferredSize(new Dimension(380, 500));
+            scroll.setPreferredSize(new Dimension(360, 300));
             resultsContainer.add(scroll);
+
+            resultsContainer.add(Box.createVerticalGlue());
         }
 
-        // ⭐ BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
+        // BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
         if ("LINEA".equalsIgnoreCase(contesto) && rottaCorrente != null && direzioneCorrente != null) {
             JButton backBtn = new JButton("← Torna alle fermate della linea");
             backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -707,6 +705,17 @@ public class SearchResultsPanel extends JPanel {
             });
             resultsContainer.add(backBtn);
         }
+        if ("RICERCA".equalsIgnoreCase(contesto) && !ultimeFermate.isEmpty()) {
+            JButton backBtn = new JButton("← Torna alle fermate");
+            backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            backBtn.addActionListener(e -> {
+                clearResults();
+                ripristinando = true;
+                aggiornaRisultati(ultimeFermate);
+            });
+            resultsContainer.add(backBtn);
+        }
+
 
         resultsContainer.revalidate();
         resultsContainer.repaint();
@@ -782,7 +791,7 @@ public class SearchResultsPanel extends JPanel {
         }
 
         // Titolo + bottone preferiti
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 3));
         topPanel.setOpaque(false);
         JLabel titolo = new JLabel("\"Linea " + rotta.getRouteShortName() + "\"");
         titolo.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -844,6 +853,7 @@ public class SearchResultsPanel extends JPanel {
             JTable tabella = new JTable(righe.toArray(new String[0][]), colonne);
             tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             tabella.setRowHeight(22);
+            tabella.getColumnModel().getColumn(0).setPreferredWidth(300); // Fermata
             tabella.setEnabled(true);
 
             tabella.addMouseListener(new MouseAdapter() {
@@ -869,7 +879,7 @@ public class SearchResultsPanel extends JPanel {
             });
 
             JScrollPane scroll = new JScrollPane(tabella);
-            scroll.setPreferredSize(new Dimension(380, 500));
+            scroll.setPreferredSize(new Dimension(320, 300));
             resultsContainer.add(scroll);
 
             // ⭐ LISTENER: Quando clicchi su una fermata nella lista della linea
