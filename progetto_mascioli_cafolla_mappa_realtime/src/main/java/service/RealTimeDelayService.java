@@ -6,27 +6,31 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 /**
  * Servizio per ottenere i ritardi real-time con cache intelligente e fallback
- * Basato sull'implementazione del tuo amico
+ * + Monitoraggio automatico qualità del servizio
  */
 public class RealTimeDelayService {
 
     private final RealTimeFetcher fetcher;
     private final RealTimeParser parser;
 
-    // ⭐ CACHE: Riusa i dati per 30 secondi
+    // CACHE: Riusa i dati per 30 secondi
     private byte[] lastTripData;
     private long lastFetchEpochMillis = 0;
     private static final long CACHE_MS = 30_000; // 30 secondi
 
-    // ⭐ MAPPE per lookup O(1)
+    // MAPPE per lookup O(1)
     private final Map<String, Trip> tripsById;
     private final Map<String, Route> routesById;
     private final Set<String> validTripStopPairs;
 
-    // ⭐ CACHE DEI DELAY PER TRIP (fallback)
+    // CACHE DEI DELAY PER TRIP (fallback)
     private final Map<String, Integer> delayByTrip = new HashMap<>();
+
+    // ⭐ MONITOR QUALITÀ DEL SERVIZIO
+    private ServiceQualityMonitor qualityMonitor;
 
     /**
      * Costruttore: inizializza con i dati GTFS statici
@@ -57,6 +61,14 @@ public class RealTimeDelayService {
         System.out.println("[RealTimeDelayService] ✓ Inizializzato");
         System.out.println("[RealTimeDelayService]   → " + tripsById.size() + " trip");
         System.out.println("[RealTimeDelayService]   → " + validTripStopPairs.size() + " coppie trip/stop valide");
+    }
+
+    /**
+     * ⭐ SETTER: Collega il monitor di qualità
+     */
+    public void setQualityMonitor(ServiceQualityMonitor monitor) {
+        this.qualityMonitor = monitor;
+        System.out.println("[RealTimeDelayService] ✓ Monitor qualità collegato");
     }
 
     /**
@@ -168,19 +180,15 @@ public class RealTimeDelayService {
     }
 
     /**
-     * ⭐ NUOVO: Ottiene delay per TRIP_ID specifico (non aggregato per linea)
-     * Restituisce: trip_id → delay in secondi
-     */
-    /**
-     * ⭐ NUOVO: Ottiene delay per route+stop (workaround per mismatch trip_id)
-     * Restituisce: orario_programmato → delay in secondi
-     */
-    /**
-     * ⭐ NUOVO: Ottiene delay per route+orario+stop (matching preciso)
+     * ⭐ METODO CON MONITORAGGIO QUALITÀ: Ottiene delay per route+orario+stop
      * Restituisce: "linea#orario" → delay in secondi
+     * + Registra automaticamente nel monitor qualità
      */
     public Map<String, Integer> getDelaysByTripId(String stopId) {
         Map<String, Integer> delaysByLineaOrario = new HashMap<>();
+
+        // Per il monitor qualità: stopName
+        String stopName = "N/A"; // Verrà sovrascritto se disponibile
 
         byte[] tripData;
         try {
@@ -244,7 +252,8 @@ public class RealTimeDelayService {
                                 .atZone(java.time.ZoneId.of("Europe/Rome"))
                                 .toLocalTime();
 
-                        String orarioProgrammatoStr = orarioProgrammato.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                        String orarioProgrammatoStr = orarioProgrammato.format(
+                                java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
 
                         // ⭐ USA ORARIO PROGRAMMATO PER MATCHING
                         String chiave = nomeLinea + "#" + orarioProgrammatoStr;
@@ -253,9 +262,18 @@ public class RealTimeDelayService {
 
                         System.out.printf("[RealTimeDelayService] ✓ Linea %s @ stop %s, orario programmato %s: %d sec%n",
                                 nomeLinea, stopId, orarioProgrammatoStr, delaySeconds);
+
+                        // ⭐ REGISTRA NEL MONITOR QUALITÀ
+                        if (qualityMonitor != null) {
+                            qualityMonitor.registraRitardo(
+                                    route.getRouteId(),
+                                    nomeLinea,
+                                    delaySeconds,
+                                    stopId,
+                                    stopName  // Puoi migliorare passando nome reale fermata
+                            );
+                        }
                     }
-
-
                 }
             }
 
@@ -263,11 +281,16 @@ public class RealTimeDelayService {
             System.err.println("[RealTimeDelayService] ✗ Errore parse: " + e.getMessage());
         }
 
-        System.out.println("[RealTimeDelayService] Delay trovati per " + delaysByLineaOrario.size() + " combinazioni linea/orario");
+        // ⭐ LOG FINALE REGISTRAZIONE
+        if (qualityMonitor != null && !delaysByLineaOrario.isEmpty()) {
+            System.out.println("[RealTimeDelayService] ✓ Registrati " +
+                    delaysByLineaOrario.size() + " dati nel monitor qualità");
+        }
+
+        System.out.println("[RealTimeDelayService] Delay trovati per " +
+                delaysByLineaOrario.size() + " combinazioni linea/orario");
         return delaysByLineaOrario;
     }
-
-
 
     /**
      * ⭐ CACHE: Riusa i dati per 30 secondi

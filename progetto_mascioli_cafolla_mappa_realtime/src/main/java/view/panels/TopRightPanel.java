@@ -10,6 +10,7 @@ public class TopRightPanel extends JPanel {
     private JButton favoritesButton;
     private JButton userButton;
     private JButton settingsButton;
+    private JButton qualityButton;
     private String currentTheme = "Blu";
 
     public TopRightPanel() {
@@ -17,7 +18,7 @@ public class TopRightPanel extends JPanel {
     }
 
     private void initializeUI() {
-        setLayout(new GridLayout(1, 3, 12, 0));
+        setLayout(new GridLayout(1, 4, 12, 0));
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 30));
 
@@ -29,6 +30,9 @@ public class TopRightPanel extends JPanel {
 
         settingsButton = createButton("Impostazioni");
         add(settingsButton);
+
+        qualityButton = createButton("Qualità");
+        add(qualityButton);
     }
 
     private JButton createButton(String text) {
@@ -85,6 +89,11 @@ public class TopRightPanel extends JPanel {
     public JButton getSettingsButton() {
         return settingsButton;
     }
+
+
+    public JButton getQualityButton() {
+        return qualityButton;
+        }
 
     public void updateTheme(String theme) {
         this.currentTheme = theme;

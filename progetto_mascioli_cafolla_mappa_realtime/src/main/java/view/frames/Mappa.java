@@ -24,6 +24,7 @@ import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
 import view.frames.MapInitializer;
+import service.ServiceQualityMonitor;
 
 
 public class Mappa extends JFrame {
@@ -56,7 +57,9 @@ public class Mappa extends JFrame {
     private MapService mapService;
     private MapController mapController;
     private RealTimeDelayService delayService;
-    
+    private ServiceQualityMonitor qualityMonitor;
+    private ServiceQualityPanel qualityPanel;
+
     public Mappa() {
         super("Roma Bus Tracker");
 
@@ -121,6 +124,7 @@ public class Mappa extends JFrame {
         settingsPanel.setVisible(false);
         layeredPane.add(settingsPanel, JLayeredPane.PALETTE_LAYER);
 
+
         // Bottoni e pannelli
         setupButtonListeners();
         userProfilePanel.setOnLoginListener(() -> {
@@ -156,9 +160,19 @@ public class Mappa extends JFrame {
         System.out.println("═══════════════════════════════════════════════");
         delayService = new RealTimeDelayService(trips, rotte, stopTimes);
 
-        // ⭐ PASSA IL SERVIZIO AL PANNELLO RISULTATI
+// ⭐ PASSA IL SERVIZIO AL PANNELLO RISULTATI
         resultsPanel.setDelayService(delayService);
         System.out.println("✓ Servizio ritardi collegato al pannello risultati");
+
+// ⭐ INIZIALIZZA MONITOR QUALITÀ E PANNELLO
+        qualityMonitor = new ServiceQualityMonitor(delayService);
+        delayService.setQualityMonitor(qualityMonitor);
+        qualityPanel = new ServiceQualityPanel(qualityMonitor);
+        qualityPanel.setBounds(getWidth() - 410, 100, 380, 500);
+        qualityPanel.setVisible(false);
+        layeredPane.add(qualityPanel, JLayeredPane.PALETTE_LAYER);
+        qualityPanel.setOnCloseListener(v -> qualityPanel.setVisible(false));
+        System.out.println("✓ Sistema monitoraggio qualità inizializzato");
         System.out.println("═══════════════════════════════════════════════");
 
 
@@ -363,6 +377,17 @@ public class Mappa extends JFrame {
                 JOptionPane.showMessageDialog(this, "Impostazioni salvate!", "Successo", JOptionPane.INFORMATION_MESSAGE);
             }
         });
+        topRightPanel.getQualityButton().addActionListener(e -> {
+            if (qualityPanel.isVisible()) {
+                qualityPanel.setVisible(false);
+            } else {
+                qualityPanel.aggiornaDati(); // Aggiorna dati prima di mostrare
+                qualityPanel.setVisible(true);
+                favoritesPanel.setVisible(false);
+                userProfilePanel.setVisible(false);
+                settingsPanel.setVisible(false);
+            }
+        });
     }
 
     private void applyTheme(String colorTheme) {
@@ -392,6 +417,11 @@ public class Mappa extends JFrame {
             }
             if (settingsPanel != null) {
                 settingsPanel.setBounds(layeredPane.getWidth() - 410, 100, 380, 400);
+            }
+
+            if (qualityPanel != null) {
+                qualityPanel.setBounds(layeredPane.getWidth() - 410, 100, 380, 500);
+
             }
 
         }
