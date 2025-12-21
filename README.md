@@ -27,8 +27,8 @@ Applicazione desktop per visualizzare in tempo reale i mezzi pubblici di Roma
 ### Installazione
 
 # Clona il repository
-git clone https://github.com/yourusername/damose.git](https://github.com/MascioliGiulia23/progetto_mascioli_cafolla_.git
-cd progetto_mascioli_cafolla_
+- git clone https://github.com/yourusername/damose.git](https://github.com/MascioliGiulia23/progetto_mascioli_cafolla_.git
+- cd progetto_mascioli_cafolla_
 
 # Compila il progetto
 mvn clean install
