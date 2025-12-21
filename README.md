@@ -29,13 +29,13 @@ Applicazione desktop per visualizzare in tempo reale i mezzi pubblici di Roma
 Clona il repository
 git clone https://github.com/MascioliGiulia23/progetto_mascioli_cafolla_.git
 
-Entra nella cartella del progetto
+#Entra nella cartella del progetto
 cd progetto_mascioli_cafolla_
 
-Compila il progetto
+#Compila il progetto
 mvn clean install
 
-Avvia l'applicazione
+#Avvia l'applicazione
 mvn exec:java
   
 
