@@ -96,6 +96,10 @@ public class Mappa extends JFrame {
             searchBar.clearSearch();  // ← AGGIUNGI QUESTA RIGA
             if (waypointDrawer != null) waypointDrawer.clearWaypoints();
             if (routeDrawer != null) routeDrawer.clearAll();
+
+            if (mapController != null) {
+                mapController.fermaAggiornamentoRealtimeBus();
+            }
         });
 
 
@@ -270,12 +274,12 @@ public class Mappa extends JFrame {
                 trovataFermata = !fermateTrovate.isEmpty();
                 trovataRotta = !rotteTrovate.isEmpty();
 
-                // ⭐ MOSTRA PRIMA LE FERMATE
+                // MOSTRA PRIMA LE FERMATE
                 if (trovataFermata) {
                     resultsPanel.aggiornaRisultati(fermateTrovate);
                 }
 
-                // ⭐ POI AGGIUNGI LE LINEE (senza cancellare)
+                // POI AGGIUNGI LE LINEE (senza cancellare)
                 if (trovataRotta) {
                     resultsPanel.aggiungiRisultatiRotte(rotteTrovate); // ← USA IL NUOVO METODO
                 }

@@ -259,6 +259,12 @@ public class MapController {
             realtimeBusTimer.stop();
             System.out.println("[Real-time] Timer fermato");
         }
+
+        // ⭐ NUOVO: rimuovi anche i waypoint dei bus
+        if (waypointDrawer != null) {
+            waypointDrawer.clearRealtimeBusWaypoints();
+            System.out.println("[Real-time] Waypoint bus rimossi");
+        }
     }
 
 }
