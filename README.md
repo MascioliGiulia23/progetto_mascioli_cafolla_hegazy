@@ -24,6 +24,21 @@ Applicazione desktop per visualizzare in tempo reale i mezzi pubblici di Roma
 - Java 11 o superiore
 - Maven 3.6+
 
+### Installazione
+
+Clona il repository
+git clone https://github.com/MascioliGiulia23/progetto_mascioli_cafolla_.git
+
+Entra nella cartella del progetto
+cd progetto_mascioli_cafolla_
+
+Compila il progetto
+mvn clean install
+
+Avvia l'applicazione
+mvn exec:java
+  
+
 ## 🛠️ Tecnologie
 
 - Java Swing per l'interfaccia grafica
