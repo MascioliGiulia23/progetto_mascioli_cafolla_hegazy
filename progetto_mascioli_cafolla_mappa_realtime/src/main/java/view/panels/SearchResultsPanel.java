@@ -677,23 +677,20 @@ public class SearchResultsPanel extends JPanel {
                 }
 
                 // Mostra intestazione con linea + direzione
+                // Mostra intestazione con linea + direzione
                 if (rottaCorrente != null && direzioneCorrente != null) {
-                    JLabel infoLinea = new JLabel(
-                            "Linea " + rottaCorrente.getRouteShortName() +
-                                    " → " + direzioneCorrente.getTripHeadsign(),
-                            SwingConstants.CENTER
-                    );
-                    infoLinea.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                    JLabel infoLinea = new JLabel("Linea " + rottaCorrente.getRouteShortName() + " → \"" +
+                            direzioneCorrente.getTripHeadsign() + "\"", SwingConstants.CENTER);
+                    infoLinea.setFont(new Font("Segoe UI", Font.BOLD, 13));  // ⭐ font più piccolo
                     infoLinea.setForeground(new Color(50, 50, 50));
 
-                    JPanel lineaPanel = new JPanel(null);
+                    JPanel lineaPanel = new JPanel(new BorderLayout());  // ⭐ usa BorderLayout
                     lineaPanel.setOpaque(false);
-                    lineaPanel.setPreferredSize(new Dimension(520, 25));
-                    lineaPanel.add(infoLinea);
-                    infoLinea.setBounds(120, 10, 280, 25);
-
+                    lineaPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));  // ⭐ margini
+                    lineaPanel.add(infoLinea, BorderLayout.CENTER);  // ⭐ centra
                     resultsContainer.add(lineaPanel);
                 }
+
 
             } else {
                 // Caso normale (ricerca fermata)
@@ -792,7 +789,6 @@ public class SearchResultsPanel extends JPanel {
                 });
             }
 
-            resultsContainer.add(Box.createVerticalGlue());
         }
 
         // BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
@@ -806,16 +802,25 @@ public class SearchResultsPanel extends JPanel {
             });
             resultsContainer.add(backBtn);
         }
-        if ("RICERCA".equalsIgnoreCase(contesto) && !ultimeFermate.isEmpty()) {
+        if ("RICERCA".equalsIgnoreCase(contesto)) {  // ⭐ RIMUOVI il check su ultimeFermate
             JButton backBtn = new JButton("← Torna alle fermate");
             backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             backBtn.addActionListener(e -> {
                 clearResults();
                 ripristinando = true;
-                aggiornaRisultati(ultimeFermate);
+                if (!ultimeFermate.isEmpty()) {  // ⭐ check spostato qui
+                    aggiornaRisultati(ultimeFermate);
+                } else {
+                    // Fallback: mostra messaggio
+                    JLabel msg = new JLabel("Nessuna fermata precedente.", SwingConstants.CENTER);
+                    resultsContainer.add(msg);
+                    resultsContainer.revalidate();
+                    resultsContainer.repaint();
+                }
             });
             resultsContainer.add(backBtn);
         }
+
 
 
         resultsContainer.revalidate();
