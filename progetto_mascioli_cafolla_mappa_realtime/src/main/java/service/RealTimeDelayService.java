@@ -29,9 +29,6 @@ public class RealTimeDelayService {
     // CACHE DEI DELAY PER TRIP (fallback)
     private final Map<String, Integer> delayByTrip = new HashMap<>();
 
-    // ⭐ MONITOR QUALITÀ DEL SERVIZIO
-    private ServiceQualityMonitor qualityMonitor;
-
     /**
      * Costruttore: inizializza con i dati GTFS statici
      */
@@ -66,10 +63,7 @@ public class RealTimeDelayService {
     /**
      * ⭐ SETTER: Collega il monitor di qualità
      */
-    public void setQualityMonitor(ServiceQualityMonitor monitor) {
-        this.qualityMonitor = monitor;
-        System.out.println("[RealTimeDelayService] ✓ Monitor qualità collegato");
-    }
+
 
     /**
      * ⭐ METODO PRINCIPALE: Ottiene delay per fermata
@@ -263,16 +257,9 @@ public class RealTimeDelayService {
                         System.out.printf("[RealTimeDelayService] ✓ Linea %s @ stop %s, orario programmato %s: %d sec%n",
                                 nomeLinea, stopId, orarioProgrammatoStr, delaySeconds);
 
-                        // ⭐ REGISTRA NEL MONITOR QUALITÀ
-                        if (qualityMonitor != null) {
-                            qualityMonitor.registraRitardo(
-                                    route.getRouteId(),
-                                    nomeLinea,
-                                    delaySeconds,
-                                    stopId,
-                                    stopName  // Puoi migliorare passando nome reale fermata
-                            );
-                        }
+
+
+
                     }
                 }
             }
@@ -281,11 +268,6 @@ public class RealTimeDelayService {
             System.err.println("[RealTimeDelayService] ✗ Errore parse: " + e.getMessage());
         }
 
-        // ⭐ LOG FINALE REGISTRAZIONE
-        if (qualityMonitor != null && !delaysByLineaOrario.isEmpty()) {
-            System.out.println("[RealTimeDelayService] ✓ Registrati " +
-                    delaysByLineaOrario.size() + " dati nel monitor qualità");
-        }
 
         System.out.println("[RealTimeDelayService] Delay trovati per " +
                 delaysByLineaOrario.size() + " combinazioni linea/orario");

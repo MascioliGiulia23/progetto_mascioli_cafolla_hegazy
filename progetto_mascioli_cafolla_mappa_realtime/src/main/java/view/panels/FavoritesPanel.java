@@ -74,32 +74,31 @@ public class FavoritesPanel extends JPanel {
         g2d.drawRoundRect(0, 0, getWidth() - 2, getHeight() - 2, 20, 20);
     }
 
-    // ← NUOVO: Metodo per caricare i preferiti di un utente
-    public void caricaPreferiti(String username) {
+    // Carica i preferiti in base all'utente attualmente loggato
+    public void caricaPreferiti() {
         clearFavorites();
 
+        // 1) Controllo login tramite UserProfilePanel
+        String username = UserProfilePanel.getCurrentUsernameStatic();
         if (username == null || username.isEmpty()) {
-            addEmptyMessage();
+            addEmptyMessageNotLogged();
             return;
         }
 
-
-
-        // Ottiene la lista dei preferiti dell'utente
-        List<Favorite> preferiti = UserManager.ottieniPreferiti(username);
+        // 2) Utente loggato → recupero preferiti
+        java.util.List<Favorite> preferiti = UserManager.ottieniPreferiti(username);
 
         if (preferiti == null || preferiti.isEmpty()) {
-            addEmptyMessage();
+            addEmptyMessageNoFavorites();
             return;
         }
 
-        // Aggiunge ogni preferito al pannello
         for (Favorite fav : preferiti) {
             addFavoriteFromModel(fav);
         }
         favoritesContainer.add(Box.createVerticalGlue());
-
     }
+
 
     //  Metodo setter per il listener
     public void setOnFavoriteClickListener(java.util.function.Consumer<Favorite> listener) {
@@ -144,7 +143,7 @@ public class FavoritesPanel extends JPanel {
             String currentUser = UserProfilePanel.getCurrentUsernameStatic();
             if (currentUser != null) {
                 UserManager.rimuoviPreferito(currentUser, fav);
-                caricaPreferiti(currentUser); // aggiorna lista dopo rimozione
+                caricaPreferiti(); // aggiorna lista dopo rimozione
             }
         });
 
@@ -187,18 +186,38 @@ public class FavoritesPanel extends JPanel {
         favoritesContainer.repaint();
     }
 
-    // ← NUOVO: Mostra messaggio vuoto
-    private void addEmptyMessage() {
+    // Utente NON loggato
+    private void addEmptyMessageNotLogged() {
+        JLabel emptyLabel = new JLabel("Effettua il login per accedere alla sezione Preferiti");
+        emptyLabel.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        emptyLabel.setForeground(new Color(120, 120, 120));
+        emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        emptyLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // corretto con BoxLayout [web:10]
+        emptyLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        favoritesContainer.add(Box.createVerticalGlue());
+        favoritesContainer.add(emptyLabel);
+        favoritesContainer.add(Box.createVerticalGlue());
+        favoritesContainer.revalidate();
+        favoritesContainer.repaint();
+    }
+
+    // Utente loggato ma senza preferiti
+    private void addEmptyMessageNoFavorites() {
         JLabel emptyLabel = new JLabel("Nessun preferito salvato. Aggiungi fermate o linee!");
         emptyLabel.setFont(new Font("Segoe UI", Font.ITALIC, 13));
         emptyLabel.setForeground(new Color(120, 120, 120));
         emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        emptyLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // centra nel BoxLayout [web:10]
         emptyLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        favoritesContainer.add(Box.createVerticalStrut(30));
+
+        favoritesContainer.add(Box.createVerticalGlue());
         favoritesContainer.add(emptyLabel);
+        favoritesContainer.add(Box.createVerticalGlue());
         favoritesContainer.revalidate();
         favoritesContainer.repaint();
     }
+
 
     public void addFavorite(String name, String details) {
         FavoriteItem item = new FavoriteItem(name, details, currentTheme);

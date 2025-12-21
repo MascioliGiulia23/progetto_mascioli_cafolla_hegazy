@@ -90,9 +90,7 @@ public class ConnectivityService {
          JLabel icon = new JLabel();
          icon.setFont(new Font("Segoe UI", Font.BOLD, 18));
          icon.setForeground(Color.WHITE);
-         // Aggiungi un simbolo (opzionale, se vuoi vedere qualcosa)
-         icon.setText(isOnline ? "✓" : "⚠");
-         panel.add(icon, BorderLayout.WEST);
+
 
          // Testo
          JLabel label = new JLabel(isOnline ? "Connessione ripristinata" : "Connessione persa");

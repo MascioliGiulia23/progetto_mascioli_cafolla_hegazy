@@ -1,7 +1,10 @@
 package view.panels;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -11,6 +14,7 @@ public class SearchBar extends JPanel {
     private JButton searchButton;
     private String currentTheme = "Blu";
     private ActionListener onSearchListener;
+    private javax.swing.Timer searchTimer; // ⭐ NUOVO
 
     public SearchBar() {
         initializeUI();
@@ -34,16 +38,48 @@ public class SearchBar extends JPanel {
         searchField.setOpaque(false);
         searchField.setCaretColor(new Color(70, 130, 180));
 
+        // ⭐ NUOVO: Timer con debounce di 300ms
+        searchTimer = new javax.swing.Timer(300, e -> {
+            String testo = getSearchText();
+            if (testo.length() >= 2 && onSearchListener != null) { // minimo 2 caratteri
+                onSearchListener.actionPerformed(new ActionEvent(searchField,
+                        ActionEvent.ACTION_PERFORMED, "search"));
+            }
+        });
+        searchTimer.setRepeats(false); // esegui una volta sola
+
+        // ⭐ NUOVO: DocumentListener per intercettare ogni cambiamento
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                searchTimer.restart(); // resetta il timer
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                String testo = getSearchText();
+                if (testo.isEmpty()) {
+                    // Se l'utente cancella tutto, pulisci i risultati
+                    searchTimer.stop();
+                } else {
+                    searchTimer.restart();
+                }
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                searchTimer.restart();
+            }
+        });
+
         searchField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (searchField.getText().equals("Cerca fermate, stazioni...")) {
                     searchField.setText("");
                     searchField.setForeground(new Color(50, 50, 50));
-
                 }
             }
-
 
             @Override
             public void focusLost(FocusEvent e) {
@@ -54,12 +90,14 @@ public class SearchBar extends JPanel {
             }
         });
 
-        //per poter fare invio col tasto enter
+        // ⭐ MODIFICATO: Invio esegue ricerca immediata e ferma il timer
         searchField.addActionListener(e -> {
+            searchTimer.stop(); // ferma il timer
             if (onSearchListener != null) {
                 onSearchListener.actionPerformed(e);
             }
         });
+
         add(searchField, BorderLayout.CENTER);
 
         searchButton = new JButton("Cerca") {
@@ -90,7 +128,10 @@ public class SearchBar extends JPanel {
         searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         searchButton.setPreferredSize(new Dimension(80, 35));
         searchButton.setFocusPainted(false);
+
+        // ⭐ MODIFICATO: anche il bottone ferma il timer
         searchButton.addActionListener(e -> {
+            searchTimer.stop();
             if (onSearchListener != null) {
                 onSearchListener.actionPerformed(e);
             }
@@ -132,9 +173,6 @@ public class SearchBar extends JPanel {
         return text.trim();
     }
 
-    /**
-     * Imposta il listener per l'evento di ricerca
-     */
     public void setOnSearchListener(ActionListener listener) {
         this.onSearchListener = listener;
     }
@@ -144,7 +182,9 @@ public class SearchBar extends JPanel {
         searchField.setCaretColor(SettingsPanel.getThemeColor(theme));
         repaint();
     }
+
     public void clearSearch() {
+        searchTimer.stop(); // ⭐ NUOVO: ferma timer quando pulisci
         searchField.setText("Cerca fermate, stazioni...");
         searchField.setForeground(new Color(160, 160, 160));
     }

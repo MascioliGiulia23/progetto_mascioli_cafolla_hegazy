@@ -291,6 +291,54 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.revalidate();
         resultsContainer.repaint();
     }
+    // ⭐ NUOVO: Aggiunge linee SENZA cancellare i risultati precedenti
+    public void aggiungiRisultatiRotte(java.util.List<Route> rotte) {
+        if (rotte == null || rotte.isEmpty()) {
+            return;
+        }
+
+        // NON chiamare clearResults() qui!
+
+        // Salva la lista solo se NON stai tornando indietro
+        if (!ripristinando) {
+            ultimeRotte.clear();
+            ultimeRotte.addAll(rotte);
+            System.out.println("Salvate " + ultimeRotte.size() + " linee trovate.");
+        } else {
+            ripristinando = false;
+            System.out.println("Ripristino linee precedenti, non salvo.");
+        }
+
+        for (Route r : rotte) {
+            String nomeLinea = r.getRouteShortName();
+            String tipo = "LINEA";
+
+            if (nomeLinea != null) {
+                String nomeUpper = nomeLinea.toUpperCase();
+                if (nomeUpper.matches("M[EABCD]")) {
+                    tipo = "METRO";
+                } else if (nomeUpper.matches("(RM|G2|BUS5|BUS8|BUS14|BUS19|NAV1|93BUS|3BIS|2BIS|3D|3S|8)")) {
+                    tipo = "TRAM";
+                }
+            }
+
+            String descrizione = "ID: " + r.getRouteId() + " (" + tipo + ")";
+            ResultItem item = new ResultItem(nomeLinea, descrizione, "", currentTheme, null);
+            item.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+            item.setOnClickListener(() -> {
+                if (onRouteClickListener != null) {
+                    onRouteClickListener.accept(r);
+                }
+            });
+
+            results.add(item);
+            resultsContainer.add(item);
+        }
+
+        resultsContainer.revalidate();
+        resultsContainer.repaint();
+    }
+
 
 
     // Classe interna per singolo risultato
@@ -788,7 +836,7 @@ public class SearchResultsPanel extends JPanel {
                 if (comp instanceof JLayeredPane lp) {
                     for (Component sub : lp.getComponents()) {
                         if (sub instanceof FavoritesPanel favPanel) {
-                            favPanel.caricaPreferiti(username);
+                            favPanel.caricaPreferiti();
                             System.out.println(" Preferiti aggiornati per " + username);
                             return;
                         }

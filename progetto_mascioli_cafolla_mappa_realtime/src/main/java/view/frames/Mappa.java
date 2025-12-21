@@ -5,12 +5,9 @@ import model.user.UserManager;
 import model.utils.Database;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.GeoPosition;
-import org.jxmapviewer.viewer.TileFactoryInfo;
 import view.panels.*;
 import javax.swing.*;
-import javax.swing.event.MouseInputListener;
 import java.awt.*;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -23,8 +20,6 @@ import controller.MapController;
 import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
-import view.frames.MapInitializer;
-import service.ServiceQualityMonitor;
 
 
 public class Mappa extends JFrame {
@@ -130,7 +125,7 @@ public class Mappa extends JFrame {
             String usernameAutenticato = userProfilePanel.getCurrentUsername();
             System.out.println("Login detected: " + usernameAutenticato);
             if (usernameAutenticato != null) {
-                favoritesPanel.caricaPreferiti(usernameAutenticato);
+                favoritesPanel.caricaPreferiti();
             }
         });
 
@@ -275,8 +270,15 @@ public class Mappa extends JFrame {
                 trovataFermata = !fermateTrovate.isEmpty();
                 trovataRotta = !rotteTrovate.isEmpty();
 
-                if (trovataFermata) resultsPanel.aggiornaRisultati(fermateTrovate);
-                if (trovataRotta) resultsPanel.aggiornaRisultatiRotte(rotteTrovate);
+                // ⭐ MOSTRA PRIMA LE FERMATE
+                if (trovataFermata) {
+                    resultsPanel.aggiornaRisultati(fermateTrovate);
+                }
+
+                // ⭐ POI AGGIUNGI LE LINEE (senza cancellare)
+                if (trovataRotta) {
+                    resultsPanel.aggiungiRisultatiRotte(rotteTrovate); // ← USA IL NUOVO METODO
+                }
             }
 
             if (!trovataFermata && !trovataRotta) {
@@ -344,6 +346,7 @@ public class Mappa extends JFrame {
             if (favoritesPanel.isVisible()) {
                 favoritesPanel.setVisible(false);
             } else {
+                favoritesPanel.caricaPreferiti();
                 favoritesPanel.setVisible(true);
                 userProfilePanel.setVisible(false);
                 settingsPanel.setVisible(false);
