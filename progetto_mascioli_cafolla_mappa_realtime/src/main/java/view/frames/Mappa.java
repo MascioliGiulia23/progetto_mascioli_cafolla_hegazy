@@ -57,7 +57,6 @@ public class Mappa extends JFrame {
     private MapService mapService;
     private MapController mapController;
     private RealTimeDelayService delayService;
-    private ServiceQualityMonitor qualityMonitor;
     private ServiceQualityPanel qualityPanel;
 
     public Mappa() {
@@ -164,15 +163,17 @@ public class Mappa extends JFrame {
         resultsPanel.setDelayService(delayService);
         System.out.println("✓ Servizio ritardi collegato al pannello risultati");
 
-// ⭐ INIZIALIZZA MONITOR QUALITÀ E PANNELLO
-        qualityMonitor = new ServiceQualityMonitor(delayService);
-        delayService.setQualityMonitor(qualityMonitor);
-        qualityPanel = new ServiceQualityPanel(qualityMonitor);
+// ⭐ INIZIALIZZA PANNELLO QUALITÀ CONTESTUALE
+        qualityPanel = new ServiceQualityPanel(delayService);  // ✅ NUOVO: passa delayService
         qualityPanel.setBounds(getWidth() - 410, 100, 380, 500);
         qualityPanel.setVisible(false);
         layeredPane.add(qualityPanel, JLayeredPane.PALETTE_LAYER);
         qualityPanel.setOnCloseListener(v -> qualityPanel.setVisible(false));
-        System.out.println("✓ Sistema monitoraggio qualità inizializzato");
+
+// ⭐ COLLEGA DASHBOARD AL RESULTS PANEL
+        resultsPanel.setQualityPanel(qualityPanel);
+
+        System.out.println("✓ Dashboard qualità contestuale inizializzata");
         System.out.println("═══════════════════════════════════════════════");
 
 
@@ -279,7 +280,7 @@ public class Mappa extends JFrame {
             }
 
             if (!trovataFermata && !trovataRotta) {
-                resultsPanel.addResult("Nessun risultato", "Nessuna fermata o linea trovata", "ℹ", null);
+                resultsPanel.addResult("Nessun risultato", "Nessuna fermata o linea trovata", "", null);
             }
 
             resultsPanel.setVisible(true);
@@ -381,13 +382,14 @@ public class Mappa extends JFrame {
             if (qualityPanel.isVisible()) {
                 qualityPanel.setVisible(false);
             } else {
-                qualityPanel.aggiornaDati(); // Aggiorna dati prima di mostrare
+                // La dashboard si aggiorna automaticamente quando cerchi fermata
                 qualityPanel.setVisible(true);
                 favoritesPanel.setVisible(false);
                 userProfilePanel.setVisible(false);
                 settingsPanel.setVisible(false);
             }
         });
+
     }
 
     private void applyTheme(String colorTheme) {
@@ -397,6 +399,7 @@ public class Mappa extends JFrame {
         favoritesPanel.updateTheme(colorTheme);
         userProfilePanel.updateTheme(colorTheme);
         settingsPanel.updateTheme(colorTheme);
+        qualityPanel.updateTheme(colorTheme);
         layeredPane.repaint();
     }
 

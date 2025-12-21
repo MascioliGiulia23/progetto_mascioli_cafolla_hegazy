@@ -36,6 +36,7 @@ public class SearchResultsPanel extends JPanel {
 
     // listener per click su fermata nella lista linea
     private java.util.function.Consumer<Fermate> onLineaStopClickListener;
+
     public void setOnLineaStopClickListener(java.util.function.Consumer<Fermate> listener) {
         this.onLineaStopClickListener = listener;
     }
@@ -49,18 +50,21 @@ public class SearchResultsPanel extends JPanel {
     private List<Trip> tuttiITrips;
     private List<StopTime> tuttiGliStopTimes;
     private service.RealTimeDelayService delayService;
+    private ServiceQualityPanel qualityPanel;
 
     public SearchResultsPanel() {
         results = new ArrayList<>();
         initializeUI();
         setPreferredSize(new Dimension(550, 600));
-        }
-        public void setDelayService(service.RealTimeDelayService service) {
-            this.delayService = service;
-        }
+    }
 
+    public void setDelayService(service.RealTimeDelayService service) {
+        this.delayService = service;
+    }
 
-
+    public void setQualityPanel(ServiceQualityPanel panel) {
+        this.qualityPanel = panel;
+    }
 
 
     // Metodo setter per waypoint
@@ -372,6 +376,7 @@ public class SearchResultsPanel extends JPanel {
             void onClick();
         }
     }
+
     private static class OrarioRow {
         String nomeLinea;
         String direzione;
@@ -389,6 +394,7 @@ public class SearchResultsPanel extends JPanel {
             return new String[]{nomeLinea, direzione, orarioFormattato};
         }
     }
+
     // metodo per mostrare le fermate
     public void mostraOrariFermata(Fermate fermata,
                                    List<StopTime> stopTimes,
@@ -415,7 +421,6 @@ public class SearchResultsPanel extends JPanel {
 
         LocalTime oraCorrente = LocalTime.now().minusMinutes(5); // ⭐ Include bus in ritardo
         LocalTime oraMax = oraCorrente.plusMinutes(65); // ⭐ Finestra 60 min effettivi (5 passati + 60 futuri)
-
 
 
         for (StopTime st : stopTimes) {
@@ -495,8 +500,6 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.add(topPanel);
 
         // Posizionamento manuale dell'ID
-
-
 
 
         // RACCOLTA DATI - Unico loop ottimizzato
@@ -691,6 +694,56 @@ public class SearchResultsPanel extends JPanel {
             scroll.setPreferredSize(new Dimension(360, 300));
             resultsContainer.add(scroll);
 
+            if (qualityPanel != null && !righeTabella.isEmpty()) {
+                // ⭐ Converti la TABELLA VISUALIZZATA (data) in BusArrivo
+                java.util.List<ServiceQualityPanel.BusArrivo> busArriviList = new java.util.ArrayList<>();
+
+                for (int i = 0; i < data.length; i++) {
+                    String nomeLinea;
+                    String direzione;
+                    String orarioStr;
+
+                    if (colonne.length == 3) {
+                        // Caso normale: 3 colonne (Linea, Direzione, Orario)
+                        nomeLinea = data[i][0];
+                        direzione = data[i][1];
+                        orarioStr = data[i][2];
+                    } else {
+                        // ⭐ Caso LINEA: 1 colonna (solo Orario)
+                        nomeLinea = (rottaCorrente != null) ? rottaCorrente.getRouteShortName() : "N/A";
+                        direzione = (direzioneCorrente != null) ? direzioneCorrente.getTripHeadsign() : "";
+                        orarioStr = data[i][0];  // ⭐ QUI IL FIX! Usa data invece di riga!
+                    }
+
+                    // Estrai ritardo dalla stringa formattata
+                    int ritardoMin = estraiRitardo(orarioStr);
+
+                    // ⭐ Calcola affollamento basato su ritardo e orario
+                    ServiceQualityPanel.AffollamentoBus affollamento = stimaAffollamento(ritardoMin, orarioStr);
+
+                    // Debug per verificare
+                    System.out.println("DEBUG BusArrivo: linea=" + nomeLinea + ", orario=" + orarioStr +
+                            ", ritardo=" + ritardoMin + " min, affollamento=" + affollamento);
+
+                    // Crea oggetto BusArrivo con tutti i dati
+                    busArriviList.add(new ServiceQualityPanel.BusArrivo(
+                            nomeLinea,
+                            direzione,
+                            orarioStr,
+                            ritardoMin,
+                            affollamento
+                    ));
+                }
+
+                // Aggiorna dashboard in modo asincrono
+                SwingUtilities.invokeLater(() -> {
+                    qualityPanel.aggiornaPerFermata(fermata, busArriviList, new ArrayList<>());
+                    if (!qualityPanel.isVisible()) {
+                        qualityPanel.setVisible(true);
+                    }
+                });
+            }
+
             resultsContainer.add(Box.createVerticalGlue());
         }
 
@@ -745,10 +798,12 @@ public class SearchResultsPanel extends JPanel {
         });
 
     }
+
     public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
         this.onCloseListener = listener;
 
     }
+
     public void mostraFermateLinea(Route rotta,
                                    Trip direzioneScelta,
                                    List<Trip> tuttiTrips,
@@ -941,4 +996,75 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.repaint();
     }
 
+// ═══════════════════════════════════════════════════════════
+// METODO HELPER - Estrai ritardo dalla stringa formattata
+// ═══════════════════════════════════════════════════════════
+
+    private int estraiRitardo(String orarioFormattato) {
+        try {
+            // Formato: "18:33 (+23 min)" o "18:33 (-5 min)" o "18:33 (On Time)"
+
+            if (orarioFormattato.contains("(+")) {
+                // Ritardo positivo
+                int start = orarioFormattato.indexOf("(+") + 2;
+                int end = orarioFormattato.indexOf(" min");
+                if (end > start) {
+                    String minStr = orarioFormattato.substring(start, end).trim();
+                    return Integer.parseInt(minStr);
+                }
+            } else if (orarioFormattato.contains("(-")) {
+                // Anticipo
+                int start = orarioFormattato.indexOf("(-") + 2;
+                int end = orarioFormattato.indexOf(" min");
+                if (end > start) {
+                    String minStr = orarioFormattato.substring(start, end).trim();
+                    return -Integer.parseInt(minStr);
+                }
+            } else if (orarioFormattato.contains("On Time")) {
+                // Puntuale
+                return 0;
+            }
+
+            // Se non trova nulla, assume puntuale
+            return 0;
+
+        } catch (Exception e) {
+            System.err.println("Errore estrazione ritardo da: " + orarioFormattato);
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private ServiceQualityPanel.AffollamentoBus stimaAffollamento(int ritardoMinuti, String orarioStr) {
+        try {
+            // Estrai l'ora dall'orario (formato "18:33 (+22 min)" o "18:33")
+            String oraPart = orarioStr.split("\\s+")[0]; // Prende solo "18:33"
+            String[] parts = oraPart.split(":");
+            int ora = Integer.parseInt(parts[0]);
+
+            // Ore di punta: 7-9 e 17-19
+            boolean oraDiPunta = (ora >= 7 && ora <= 9) || (ora >= 17 && ora <= 19);
+
+            if (oraDiPunta) {
+                // In ora di punta, più ritardo = più affollato
+                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.MOLTO_ALTO;
+                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.ALTO;
+                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.MEDIO;
+                return ServiceQualityPanel.AffollamentoBus.MEDIO; // Comunque medio in ora di punta
+            } else {
+                // Fuori punta
+                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.ALTO;
+                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.MEDIO;
+                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.BASSO;
+                return ServiceQualityPanel.AffollamentoBus.BASSO;
+            }
+
+        } catch (Exception e) {
+            System.err.println("ERRORE stimaAffollamento per orario: " + orarioStr);
+            e.printStackTrace();
+            return ServiceQualityPanel.AffollamentoBus.SCONOSCIUTO;
+        }
+    }
+
 }
+
