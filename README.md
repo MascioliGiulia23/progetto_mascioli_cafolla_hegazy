@@ -103,7 +103,7 @@ progetto_mascioli_cafolla_mappa_realtime/
                 ├── shapes.txt
                 ├── stops.txt
                 ├── stop_times.txt
-                └── trips.txt
+                └── trips.txt```
 
 
 
