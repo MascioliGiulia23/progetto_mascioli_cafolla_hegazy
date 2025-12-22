@@ -38,64 +38,73 @@ mvn exec:java
 
 ## 📁 Struttura del progetto
 
-- **src/main/java/**
-  - **controller/** - Gestione logica della mappa
-    - `MapController.java`
-  - **model/** - Modelli dati dell'applicazione
-    - **gtfs/** - Entità dati GTFS (fermate, percorsi, orari)
-      - `CalendarDate.java`
-      - `Fermate.java`
-      - `Route.java`
-      - `ShapeRoute.java`
-      - `StopTime.java`
-      - `Trip.java`
-    - **user/** - Gestione utenti e preferenze
-      - `Favorite.java`
-      - `User.java`
-      - `UserManager.java`
-    - **utils/** - Utilità database e calcoli geografici
-      - `Database.java`
-      - `GeoUtils.java`
-  - **service/** - Business logic e integrazione API GTFS Realtime
-    - `ConnectivityService.java`
-    - `GtfsService.java`
-    - `GtfsRealtimeService.java`
-    - `GtfsRealtimeVehicleService.java`
-    - `MapService.java`
-    - `RealTimeDelayService.java`
-    - `RealTimeFetcher.java`
-    - `RealTimeParser.java`
-  - **view/** - Interfaccia grafica Swing
-    - `Jframe.java`
-    - **frames/** - Finestre principali
-      - `MapInitializer.java`
-      - `Mappa.java`
-    - **map/** - Componenti per la visualizzazione della mappa
-      - `BusWaypoint.java`
-      - `RouteDrawer.java`
-      - `WaypointDrawer.java`
-    - **panels/** - Pannelli UI (ricerca, preferiti, profilo)
-      - `FavoritesPanel.java`
-      - `SearchBar.java`
-      - `SearchResultsPanel.java`
-      - `ServiceQualityPanel.java`
-      - `SettingsPanel.java`
-      - `TopRightPanel.java`
-      - `UserProfilePanel.java`
-- **src/main/resources/** - Risorse statiche
-  - **static_gtfs/** - Dati GTFS statici di ATAC Roma
-    - `agency.txt`
-    - `calendar_dates.txt`
-    - `routes.txt`
-    - `shapes.txt`
-    - `stops.txt`
-    - `stop_times.txt`
-    - `trips.txt`
-- **src/test/java/** - Unit tests
-  - **model/gtfs/**
-  - **model/user/**
-  - **model/utils/**
-- `pom.xml` - Configurazione Maven e dipendenze
+```text
+progetto_mascioli_cafolla_mappa_realtime/
+├── pom.xml
+└── src/
+    └── main/
+        ├── java/
+        │   ├── controller/
+        │   │   └── MapController.java
+        │   │
+        │   ├── model/
+        │   │   ├── gtfs/
+        │   │   │   ├── CalendarDate.java
+        │   │   │   ├── Fermate.java
+        │   │   │   ├── Route.java
+        │   │   │   ├── ShapeRoute.java
+        │   │   │   ├── StopTime.java
+        │   │   │   └── Trip.java
+        │   │   │
+        │   │   ├── user/
+        │   │   │   ├── Favorite.java
+        │   │   │   ├── User.java
+        │   │   │   └── UserManager.java
+        │   │   │
+        │   │   └── utils/
+        │   │       ├── Database.java
+        │   │       └── GeoUtils.java
+        │   │
+        │   ├── service/
+        │   │   ├── ConnectivityService.java
+        │   │   ├── GtfsService.java
+        │   │   ├── GtfsRealtimeService.java
+        │   │   ├── GtfsRealtimeVehicleService.java
+        │   │   ├── MapService.java
+        │   │   ├── RealTimeDelayService.java
+        │   │   ├── RealTimeFetcher.java
+        │   │   └── RealTimeParser.java
+        │   │
+        │   └── view/
+        │       ├── Jframe.java
+        │       ├── frames/
+        │       │   ├── MapInitializer.java
+        │       │   └── Mappa.java
+        │       │
+        │       ├── map/
+        │       │   ├── BusWaypoint.java
+        │       │   ├── RouteDrawer.java
+        │       │   └── WaypointDrawer.java
+        │       │
+        │       └── panels/
+        │           ├── FavoritesPanel.java
+        │           ├── SearchBar.java
+        │           ├── SearchResultsPanel.java
+        │           ├── ServiceQualityPanel.java
+        │           ├── SettingsPanel.java
+        │           ├── TopRightPanel.java
+        │           └── UserProfilePanel.java
+        │
+        └── resources/
+            └── static_gtfs/
+                ├── agency.txt
+                ├── calendar_dates.txt
+                ├── routes.txt
+                ├── shapes.txt
+                ├── stops.txt
+                ├── stop_times.txt
+                └── trips.txt
+
 
 
 ## 🛠️ Tecnologie
