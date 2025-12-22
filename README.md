@@ -27,16 +27,54 @@ Applicazione desktop per la visualizzazione in tempo reale dei mezzi pubblici di
 ## 🚀 Come iniziare
 
 ### Prerequisiti
-- Java 11 o superiore
+
+- Java 23 o superiore  
 - Maven 3.6+
 
-### Installazione
+---
+
+### Clonare il repository
 
 ```bash
 git clone https://github.com/MascioliGiulia23/progetto_mascioli_cafolla_.git
-cd progetto_mascioli_cafolla_
-mvn clean install
-mvn exec:java
+cd progetto_mascioli_cafolla_/progetto_mascioli_cafolla_mappa_realtime
+```
+
+---
+
+### Compilazione
+
+```bash
+mvn clean package -DskipTests
+```
+
+Il file JAR verrà generato in:
+
+```text
+target/progetto_mascioli_cafolla-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+---
+
+### Esecuzione
+
+```bash
+cd target
+java -jar progetto_mascioli_cafolla-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+Oppure:
+
+```bash
+java -jar target/progetto_mascioli_cafolla-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+#### Avvio con doppio click (Windows)
+
+Dopo la compilazione è possibile avviare l’applicazione tramite il file:
+
+```text
+target/Avvia_App.bat
 ```
 
 ---
@@ -81,7 +119,7 @@ progetto_mascioli_cafolla_mappa_realtime/
         │   │   └── RealTimeParser.java
         │   │
         │   └── view/
-        │       ├── Jframe.java
+        │       ├── App.java
         │       ├── frames/
         │       │   ├── MapInitializer.java
         │       │   └── Mappa.java
@@ -115,10 +153,12 @@ progetto_mascioli_cafolla_mappa_realtime/
 
 ## 🛠️ Tecnologie
 
+- Java 23
 - Java Swing
-- JXMapViewer
+- JXMapViewer2
 - GTFS / GTFS Realtime
-- Maven
+- Maven Assembly Plugin
+- Protocol Buffers
 
 ---
 
