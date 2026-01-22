@@ -19,9 +19,12 @@ public class RealTimeFetcher {
     public RealTimeFetcher(String tripUrl, String vehicleUrl) {
         this.tripUrl = tripUrl;
         this.vehicleUrl = vehicleUrl;
+
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
+                .followRedirects(HttpClient.Redirect.ALWAYS) // ✅ segue 301/302/307/308
                 .build();
+
     }
 
     /**
@@ -42,8 +45,9 @@ public class RealTimeFetcher {
         System.out.println("[RealTimeFetcher] Status: " + response.statusCode() +
                 " | Size: " + response.body().length + " bytes");
 
-        if (response.statusCode() < 200 || response.statusCode() >= 400) {
-            throw new IOException("HTTP error " + response.statusCode());
+        int code = response.statusCode();
+        if (code < 200 || code >= 300) { // ✅ solo 2xx ok
+            throw new IOException("HTTP error " + code);
         }
 
         return response.body();
