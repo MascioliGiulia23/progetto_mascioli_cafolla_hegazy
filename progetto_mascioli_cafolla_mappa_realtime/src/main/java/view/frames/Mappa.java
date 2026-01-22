@@ -222,6 +222,10 @@ public class Mappa extends JFrame {
         searchBar.setOnSearchListener(e -> {
             String testo = searchBar.getSearchText().trim();
             System.out.println("Ricerca attivata: " + testo);
+//  Stop real-time della linea precedente quando faccio una nuova ricerca
+            if (mapController != null) {
+                mapController.fermaAggiornamentoRealtimeBus();
+            }
 
             if (testo.isEmpty()) return;
 
@@ -294,6 +298,12 @@ public class Mappa extends JFrame {
 
         // Listener già presenti — non modificare
         resultsPanel.setOnStopClickListener(fermata -> {
+
+            //  Sto passando a “modalità fermata”: stop aggiornamento bus della linea precedente
+            if (mapController != null) {
+                mapController.fermaAggiornamentoRealtimeBus();
+            }
+
             resultsPanel.mostraOrariFermata(fermata, stopTimes, trips, rotte, fermate, null, null, "RICERCA");
             mapService.mostraWaypointLinee(fermata);
         });
@@ -345,35 +355,49 @@ public class Mappa extends JFrame {
     }
 
 
+    private void showOnly(JPanel panelToShow) {
+        favoritesPanel.setVisible(false);
+        userProfilePanel.setVisible(false);
+        settingsPanel.setVisible(false);
+        qualityPanel.setVisible(false);
+
+        if (panelToShow != null) {
+            panelToShow.setVisible(true);
+        }
+    }
+
     private void setupButtonListeners() {
+
         topRightPanel.getFavoritesButton().addActionListener(e -> {
             if (favoritesPanel.isVisible()) {
-                favoritesPanel.setVisible(false);
+                showOnly(null);
             } else {
                 favoritesPanel.caricaPreferiti();
-                favoritesPanel.setVisible(true);
-                userProfilePanel.setVisible(false);
-                settingsPanel.setVisible(false);
+                showOnly(favoritesPanel);
             }
         });
 
         topRightPanel.getUserButton().addActionListener(e -> {
             if (userProfilePanel.isVisible()) {
-                userProfilePanel.setVisible(false);
+                showOnly(null);
             } else {
-                userProfilePanel.setVisible(true);
-                favoritesPanel.setVisible(false);
-                settingsPanel.setVisible(false);
+                showOnly(userProfilePanel);
             }
         });
 
         topRightPanel.getSettingsButton().addActionListener(e -> {
             if (settingsPanel.isVisible()) {
-                settingsPanel.setVisible(false);
+                showOnly(null);
             } else {
-                settingsPanel.setVisible(true);
-                favoritesPanel.setVisible(false);
-                userProfilePanel.setVisible(false);
+                showOnly(settingsPanel);
+            }
+        });
+
+        topRightPanel.getQualityButton().addActionListener(e -> {
+            if (qualityPanel.isVisible()) {
+                showOnly(null);
+            } else {
+                showOnly(qualityPanel);
             }
         });
 
@@ -385,19 +409,8 @@ public class Mappa extends JFrame {
                 JOptionPane.showMessageDialog(this, "Impostazioni salvate!", "Successo", JOptionPane.INFORMATION_MESSAGE);
             }
         });
-        topRightPanel.getQualityButton().addActionListener(e -> {
-            if (qualityPanel.isVisible()) {
-                qualityPanel.setVisible(false);
-            } else {
-                // La dashboard si aggiorna automaticamente quando cerchi fermata
-                qualityPanel.setVisible(true);
-                favoritesPanel.setVisible(false);
-                userProfilePanel.setVisible(false);
-                settingsPanel.setVisible(false);
-            }
-        });
-
     }
+
 
     private void applyTheme(String colorTheme) {
         searchBar.updateTheme(colorTheme);
