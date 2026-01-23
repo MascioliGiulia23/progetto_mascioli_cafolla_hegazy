@@ -1087,28 +1087,22 @@ public class SearchResultsPanel extends JPanel {
             return 0;
         }
     }
-
     private ServiceQualityPanel.AffollamentoBus stimaAffollamento(int ritardoMinuti, String orarioStr) {
         try {
-            // Estrai l'ora dall'orario (formato "18:33 (+22 min)" o "18:33")
-            String oraPart = orarioStr.split("\\s+")[0]; // Prende solo "18:33"
-            String[] parts = oraPart.split(":");
-            int ora = Integer.parseInt(parts[0]);
+            String oraPart = orarioStr.split("\\s+")[0];
+            int ora = Integer.parseInt(oraPart.split(":")[0]);
 
-            // Ore di punta: 7-9 e 17-19
             boolean oraDiPunta = (ora >= 7 && ora <= 9) || (ora >= 17 && ora <= 19);
 
             if (oraDiPunta) {
-                // In ora di punta, più ritardo = più affollato
-                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.MOLTO_ALTO;
-                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.ALTO;
-                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.MEDIO;
-                return ServiceQualityPanel.AffollamentoBus.MEDIO; // Comunque medio in ora di punta
+                if (ritardoMinuti >= 15) return ServiceQualityPanel.AffollamentoBus.MOLTO_ALTO;
+                if (ritardoMinuti >= 8)  return ServiceQualityPanel.AffollamentoBus.ALTO;
+                if (ritardoMinuti >= 3)  return ServiceQualityPanel.AffollamentoBus.MEDIO;
+                return ServiceQualityPanel.AffollamentoBus.BASSO;   // ✅ differenzia i puntuali
             } else {
-                // Fuori punta
-                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.ALTO;
-                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.MEDIO;
-                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.BASSO;
+                if (ritardoMinuti >= 15) return ServiceQualityPanel.AffollamentoBus.ALTO;
+                if (ritardoMinuti >= 8)  return ServiceQualityPanel.AffollamentoBus.MEDIO;
+                if (ritardoMinuti >= 3)  return ServiceQualityPanel.AffollamentoBus.BASSO;
                 return ServiceQualityPanel.AffollamentoBus.BASSO;
             }
 
@@ -1118,6 +1112,37 @@ public class SearchResultsPanel extends JPanel {
             return ServiceQualityPanel.AffollamentoBus.SCONOSCIUTO;
         }
     }
+
+//    private ServiceQualityPanel.AffollamentoBus stimaAffollamento(int ritardoMinuti, String orarioStr) {
+//        try {
+//            // Estrai l'ora dall'orario (formato "18:33 (+22 min)" o "18:33")
+//            String oraPart = orarioStr.split("\\s+")[0]; // Prende solo "18:33"
+//            String[] parts = oraPart.split(":");
+//            int ora = Integer.parseInt(parts[0]);
+//
+//            // Ore di punta: 7-9 e 17-19
+//            boolean oraDiPunta = (ora >= 7 && ora <= 9) || (ora >= 17 && ora <= 19);
+//
+//            if (oraDiPunta) {
+//                // In ora di punta, più ritardo = più affollato
+//                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.MOLTO_ALTO;
+//                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.ALTO;
+//                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.MEDIO;
+//                return ServiceQualityPanel.AffollamentoBus.MEDIO; // Comunque medio in ora di punta
+//            } else {
+//                // Fuori punta
+//                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.ALTO;
+//                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.MEDIO;
+//                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.BASSO;
+//                return ServiceQualityPanel.AffollamentoBus.BASSO;
+//            }
+//
+//        } catch (Exception e) {
+//            System.err.println("ERRORE stimaAffollamento per orario: " + orarioStr);
+//            e.printStackTrace();
+//            return ServiceQualityPanel.AffollamentoBus.SCONOSCIUTO;
+//        }
+//    }
 
 }
 

@@ -355,6 +355,8 @@ public class Mappa extends JFrame {
     }
 
 
+    // Nasconde tutti i pannelli laterali e rende visibile solo quello passato come parametro
+// Se panelToShow è null, tutti i pannelli vengono chiusi
     private void showOnly(JPanel panelToShow) {
         favoritesPanel.setVisible(false);
         userProfilePanel.setVisible(false);
