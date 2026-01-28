@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+//(serve per i test)
+import java.util.Objects;                  // serve per i test
+import java.util.function.BooleanSupplier; // serve per i test
+import java.util.function.Consumer;        // serve per i test
 
 
 /**
@@ -18,6 +22,10 @@ public class ConnectivityService {
 
     // Stato corrente della connessione (true = online, false = offline)
     private static boolean online = false;
+    // >>> NUOVE DIPENDENZE INIETTABILI (serve per i test)
+    // Di default puntano al comportamento reale, quindi NON cambia nulla nell'app.
+    private static BooleanSupplier probe = ConnectivityService::testConnection; // serve per i test
+    private static Consumer<Boolean> notifier = ConnectivityService::showConnectionToast; // serve per i test
 
     /**
      * Restituisce l'ultimo stato noto della connessione.
@@ -33,13 +41,35 @@ public class ConnectivityService {
      */
     public static void checkConnection() {
         boolean previousState = online;
-        online = testConnection();
+        //online = testConnection();
+
+
+        // >>> MODIFICA MINIMA: usa probe (che di default chiama testConnection)
+        // Comportamento identico a prima.
+        online = probe.getAsBoolean(); // serve per i test
 
         if (previousState != online) {
             System.out.println("[ConnectivityService] Stato cambiato: " +
                     (online ? "ONLINE" : "OFFLINE"));
-            showConnectionToast(online);
+           // showConnectionToast(online);
+            // >>> MODIFICA MINIMA: usa notifier (che di default chiama showConnectionToast)
+            notifier.accept(online); // serve per i test
         }
+    }
+    // ===== TEST HOOKS (solo per test) =====
+
+    static void setProbeForTest(BooleanSupplier newProbe) { // serve per i test
+        probe = Objects.requireNonNull(newProbe);          // serve per i test
+    }
+
+    static void setNotifierForTest(Consumer<Boolean> newNotifier) { // serve per i test
+        notifier = Objects.requireNonNull(newNotifier);              // serve per i test
+    }
+
+    static void resetForTest() { // serve per i test
+        online = false;                               // serve per i test
+        probe = ConnectivityService::testConnection;  // serve per i test
+        notifier = ConnectivityService::showConnectionToast; // serve per i test
     }
 
     /**

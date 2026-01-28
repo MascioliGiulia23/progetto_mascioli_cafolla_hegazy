@@ -6,12 +6,41 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
+
+// >>> NUOVE IMPORT (serve per i test)
+import java.util.Objects;            // serve per i test
+import java.util.function.Supplier;  // serve per i test
+
+
 public class GtfsRealtimeVehicleService {
 
     // Feed ufficiale Roma Mobilità per le posizioni dei veicoli
     private static final String VEHICLE_POSITIONS_URL =
             "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb";
+    // >>> NUOVA DIPENDENZA INIETTABILE (serve per i test)
+    // Default = comportamento originale (apre URL reale). Quindi l'app NON cambia.
+    private static Supplier<InputStream> feedStreamSupplier = () -> { // serve per i test
+        try {
+            return new URL(VEHICLE_POSITIONS_URL).openStream();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }; // serve per i test
 
+    // >>> TEST HOOKS (serve per i test)
+    static void setFeedStreamSupplierForTest(Supplier<InputStream> supplier) { // serve per i test
+        feedStreamSupplier = Objects.requireNonNull(supplier);                 // serve per i test
+    }
+
+    static void resetForTest() { // serve per i test
+        feedStreamSupplier = () -> { // serve per i test
+            try {
+                return new URL(VEHICLE_POSITIONS_URL).openStream();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }; // serve per i test
+    }
     /**
      * Recupera le posizioni in tempo reale di tutti i veicoli
      * Restituisce una mappa: tripId -> VehicleData
@@ -19,7 +48,8 @@ public class GtfsRealtimeVehicleService {
     public static Map<String, VehicleData> getRealtimeVehiclePositions() {
         Map<String, VehicleData> vehicles = new HashMap<>();
 
-        try (InputStream input = new URL(VEHICLE_POSITIONS_URL).openStream()) {
+        try (InputStream input = feedStreamSupplier.get()) {
+
             GtfsRealtime.FeedMessage feed = GtfsRealtime.FeedMessage.parseFrom(input);
 
             for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
