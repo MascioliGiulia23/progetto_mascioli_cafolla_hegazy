@@ -23,8 +23,20 @@ public class SettingsPanel extends JPanel {
     public static final String COLOR_ROSA = "Viola";
 
     public SettingsPanel() {
+        this(true); // ✅ comportamento identico: timer parte sempre
+    }
+
+    // ============================================================
+    // serve per i test: possibilità di NON avviare il timer
+    // ============================================================
+    SettingsPanel(boolean startMonitoring) {
         initializeUI();
-        startStatusMonitoring();
+        if (startMonitoring) {
+            startStatusMonitoring();
+        } else {
+            // In test vogliamo comunque inizializzare lo status una volta
+            updateConnectionStatus();
+        }
     }
 
     private void initializeUI() {
@@ -132,17 +144,17 @@ public class SettingsPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-
-     //Avvia il monitoraggio periodico dello stato di connessione.
-     // Aggiorna l'interfaccia ogni 5 secondi.
-
+    /*
+     * Avvia il monitoraggio periodico dello stato di connessione.
+     * Aggiorna l'interfaccia ogni 5 secondi.
+     */
     private void startStatusMonitoring() {
         // Aggiorna subito lo status all'avvio
         updateConnectionStatus();
 
         // Timer che aggiorna lo status ogni 5 secondi
         statusUpdateTimer = new Timer(5000, e -> {
-            ConnectivityService.checkConnection();
+            checkConnection();
             updateConnectionStatus();
         });
         statusUpdateTimer.start();
@@ -152,7 +164,7 @@ public class SettingsPanel extends JPanel {
      * Aggiorna l'interfaccia in base allo stato corrente della connessione.
      */
     private void updateConnectionStatus() {
-        boolean isOnline = ConnectivityService.isOnline();
+        boolean isOnline = isOnline();
 
         SwingUtilities.invokeLater(() -> {
             if (isOnline) {
@@ -167,10 +179,10 @@ public class SettingsPanel extends JPanel {
         });
     }
 
-
-     //Ferma il timer di monitoraggio quando il pannello viene rimosso.
-     // Chiamalo quando chiudi l'applicazione o rimuovi il pannello.
-
+    /*
+     * Ferma il timer di monitoraggio quando il pannello viene rimosso.
+     * Chiamalo quando chiudi l'applicazione o rimuovi il pannello.
+     */
     public void stopStatusMonitoring() {
         if (statusUpdateTimer != null) {
             statusUpdateTimer.stop();
@@ -253,5 +265,30 @@ public class SettingsPanel extends JPanel {
         this.currentTheme = theme;
         this.colorCombo.setSelectedItem(theme);
         repaint();
+    }
+
+    // ============================================================
+    // serve per i test: incapsula le chiamate statiche
+    // ============================================================
+
+    protected boolean isOnline() {
+        return ConnectivityService.isOnline();
+    }
+
+    protected void checkConnection() {
+        ConnectivityService.checkConnection();
+    }
+
+    // Getter utili ai test (package-private)
+    String getStatusTextForTest() {
+        return statusLabel.getText();
+    }
+
+    Color getStatusColorForTest() {
+        return statusLabel.getForeground();
+    }
+
+    Color getStatusIconColorForTest() {
+        return statusIcon.getForeground();
     }
 }

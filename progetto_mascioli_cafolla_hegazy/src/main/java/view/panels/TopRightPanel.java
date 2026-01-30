@@ -93,7 +93,7 @@ public class TopRightPanel extends JPanel {
 
     public JButton getQualityButton() {
         return qualityButton;
-        }
+    }
 
     public void updateTheme(String theme) {
         this.currentTheme = theme;

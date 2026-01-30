@@ -7,7 +7,6 @@ import org.jxmapviewer.painter.CompoundPainter;
 import org.jxmapviewer.painter.Painter;
 import org.jxmapviewer.viewer.GeoPosition;
 
-
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -44,20 +43,34 @@ public class RouteDrawer {
             geoPositions.add(new GeoPosition(p.getLatitude(), p.getLongitude()));
         }
 
-        // Crea un nuovo painter
-        RoutePainter routePainter = new RoutePainter(geoPositions, color);
-        painters.add(routePainter);
-
-        // Aggiorna overlay sulla mappa
-        CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(painters);
-        mapViewer.setOverlayPainter(compoundPainter);
-
-        // Centra la mappa sulla shape
-        GeoPosition centro = geoPositions.get(geoPositions.size() / 2);
-        mapViewer.setAddressLocation(centro);
+        // >>> usa metodo comune (serve per i test)
+        drawGeoPositions(geoPositions, color); // serve per i test
 
         System.out.println("✓ Tratta disegnata per shape_id=" + shapeRoute.getShapeId() +
                 " (" + geoPositions.size() + " punti)");
+    }
+
+    // =========================
+    // NUOVO METODO (serve per i test)
+    // Permette di testare RouteDrawer senza dipendere da ShapeRoute
+    // =========================
+    void drawGeoPositions(List<GeoPosition> geoPositions, Color color) { // serve per i test
+        if (geoPositions == null || geoPositions.isEmpty()) { // serve per i test
+            System.err.println("⚠ Track vuota o nulla, impossibile disegnare!"); // serve per i test
+            return; // serve per i test
+        }
+
+        // Crea un nuovo painter
+        RoutePainter routePainter = new RoutePainter(new ArrayList<>(geoPositions), color); // serve per i test
+        painters.add(routePainter); // serve per i test
+
+        // Aggiorna overlay sulla mappa
+        CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(painters); // serve per i test
+        mapViewer.setOverlayPainter(compoundPainter); // serve per i test
+
+        // Centra la mappa sulla shape
+        GeoPosition centro = geoPositions.get(geoPositions.size() / 2); // serve per i test
+        mapViewer.setAddressLocation(centro); // serve per i test
     }
 
     /**
@@ -68,6 +81,7 @@ public class RouteDrawer {
         mapViewer.setOverlayPainter(null);
         System.out.println(" Tutte le tratte rimosse dalla mappa.");
     }
+
     // Restituisce i punti dell'ultima shape disegnata
     public List<GeoPosition> getGeoPositions() {
         if (painters.isEmpty()) return new ArrayList<>();
@@ -80,7 +94,10 @@ public class RouteDrawer {
         return new ArrayList<>();
     }
 
-
+    // >>> getter di supporto (serve per i test)
+    int getPaintersCountForTest() { // serve per i test
+        return painters.size(); // serve per i test
+    }
 
     /**
      * Classe interna che disegna una singola linea sulla mappa

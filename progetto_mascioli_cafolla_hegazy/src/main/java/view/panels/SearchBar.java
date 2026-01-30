@@ -188,4 +188,28 @@ public class SearchBar extends JPanel {
         searchField.setText("Cerca fermate, stazioni...");
         searchField.setForeground(new Color(160, 160, 160));
     }
+
+    // ==================================================
+    // AGGIUNTE (serve per i test)
+    // ==================================================
+
+    JTextField getSearchFieldForTest() { // serve per i test
+        return searchField; // serve per i test
+    }
+
+    JButton getSearchButtonForTest() { // serve per i test
+        return searchButton; // serve per i test
+    }
+
+    boolean isSearchTimerRunningForTest() { // serve per i test
+        return searchTimer != null && searchTimer.isRunning(); // serve per i test
+    }
+
+    void triggerDebouncedSearchForTest() { // serve per i test
+        // Simula lo “scatto” del debounce senza aspettare 300ms
+        String testo = getSearchText(); // serve per i test
+        if (testo.length() >= 2 && onSearchListener != null) { // serve per i test
+            onSearchListener.actionPerformed(new ActionEvent(searchField, ActionEvent.ACTION_PERFORMED, "search")); // serve per i test
+        }
+    }
 }

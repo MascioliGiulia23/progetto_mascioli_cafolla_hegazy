@@ -21,6 +21,8 @@ import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
 
+// >>> NUOVI IMPORT (serve per i test)
+import java.awt.GraphicsEnvironment; // serve per i test
 
 public class Mappa extends JFrame {
     private JXMapViewer mapViewer;
@@ -54,9 +56,58 @@ public class Mappa extends JFrame {
     private RealTimeDelayService delayService;
     private ServiceQualityPanel qualityPanel;
 
+    // =========================
+    // COSTRUTTORE PER TEST (serve per i test)
+    // =========================
+    Mappa(boolean testMode) { // serve per i test
+        super("Roma Bus Tracker"); // serve per i test
+
+        // In test mode inizializziamo solo i componenti minimi per testare logica e visibilità
+        if (testMode) { // serve per i test
+            // Evita crash in ambienti headless: in quel caso i test verranno skippati (gestito nel test)
+            // Qui facciamo solo init minimo.
+            setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // serve per i test
+
+            layeredPane = new JLayeredPane(); // serve per i test
+            layeredPane.setLayout(null); // serve per i test
+
+            mapViewer = new JXMapViewer(); // serve per i test
+            mapViewer.setBounds(0, 0, 800, 600); // serve per i test
+            layeredPane.add(mapViewer, JLayeredPane.DEFAULT_LAYER); // serve per i test
+
+            // Pannelli: stessi costruttori che usi in produzione
+            searchBar = new SearchBar(); // serve per i test
+            resultsPanel = new SearchResultsPanel(); // serve per i test
+            topRightPanel = new TopRightPanel(); // serve per i test
+            favoritesPanel = new FavoritesPanel(); // serve per i test
+            userProfilePanel = new UserProfilePanel(); // serve per i test
+            settingsPanel = new SettingsPanel(); // serve per i test
+
+            // qualityPanel: proviamo a costruirlo con delayService null (in test non lo usiamo)
+            // Se il tuo ServiceQualityPanel non accetta null, dimmelo e lo rendiamo iniettabile.
+            qualityPanel = new ServiceQualityPanel(null); // serve per i test
+
+            // stato iniziale simile a produzione
+            resultsPanel.setVisible(false); // serve per i test
+            favoritesPanel.setVisible(false); // serve per i test
+            userProfilePanel.setVisible(false); // serve per i test
+            settingsPanel.setVisible(false); // serve per i test
+            qualityPanel.setVisible(false); // serve per i test
+
+            add(layeredPane, BorderLayout.CENTER); // serve per i test
+            // NON facciamo setVisible / MAXIMIZED in test mode (serve per i test)
+
+            return; // serve per i test
+        }
+    }
+
     public Mappa() {
         super("Roma Bus Tracker");
 
+        // =========================
+        // BLOCCO PER TEST (serve per i test)
+        // Se qualcuno istanzia Mappa(true) usa l’altro costruttore e non passa di qui.
+        // =========================
 
         UserManager.caricaUtenti();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -73,7 +124,6 @@ public class Mappa extends JFrame {
 
         // Setup mappa di base
         mapViewer = MapInitializer.creaMappaBase();
-
 
         // Layer principale e pannelli grafici
         layeredPane = new JLayeredPane();
@@ -102,7 +152,6 @@ public class Mappa extends JFrame {
             }
         });
 
-
         topRightPanel = new TopRightPanel();
         topRightPanel.setBounds(getWidth() - 500, 15, 480, 55);
         layeredPane.add(topRightPanel, JLayeredPane.PALETTE_LAYER);
@@ -121,7 +170,6 @@ public class Mappa extends JFrame {
         settingsPanel.setBounds(getWidth() - 410, 100, 380, 400);
         settingsPanel.setVisible(false);
         layeredPane.add(settingsPanel, JLayeredPane.PALETTE_LAYER);
-
 
         // Bottoni e pannelli
         setupButtonListeners();
@@ -150,36 +198,34 @@ public class Mappa extends JFrame {
                 trips,
                 stopTimes,
                 forme
-
         );
+
         // ⭐ INIZIALIZZAZIONE SERVIZIO RITARDI REAL-TIME
         System.out.println("═══════════════════════════════════════════════");
         System.out.println("Inizializzazione servizio ritardi real-time...");
         System.out.println("═══════════════════════════════════════════════");
         delayService = new RealTimeDelayService(trips, rotte, stopTimes);
 
-// ⭐ PASSA IL SERVIZIO AL PANNELLO RISULTATI
+        // ⭐ PASSA IL SERVIZIO AL PANNELLO RISULTATI
         resultsPanel.setDelayService(delayService);
         System.out.println("✓ Servizio ritardi collegato al pannello risultati");
 
-// ⭐ INIZIALIZZA PANNELLO QUALITÀ CONTESTUALE
+        // ⭐ INIZIALIZZA PANNELLO QUALITÀ CONTESTUALE
         qualityPanel = new ServiceQualityPanel(delayService);  // ✅ NUOVO: passa delayService
         qualityPanel.setBounds(getWidth() - 410, 100, 380, 500);
         qualityPanel.setVisible(false);
         layeredPane.add(qualityPanel, JLayeredPane.PALETTE_LAYER);
         qualityPanel.setOnCloseListener(v -> qualityPanel.setVisible(false));
 
-// ⭐ COLLEGA DASHBOARD AL RESULTS PANEL
+        // ⭐ COLLEGA DASHBOARD AL RESULTS PANEL
         resultsPanel.setQualityPanel(qualityPanel);
 
         System.out.println("✓ Dashboard qualità contestuale inizializzata");
         System.out.println("═══════════════════════════════════════════════");
 
-
         // Configura i pannelli con i drawer
         resultsPanel.setRouteDrawer(routeDrawer, forme);
         resultsPanel.setWaypointDrawer(waypointDrawer, fermate, rotte, trips, stopTimes);
-
 
         // Listener di ricerca (mapController è inizializzato )
         setupSearchListener();
@@ -216,13 +262,11 @@ public class Mappa extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
-
-
     private void setupSearchListener() {
         searchBar.setOnSearchListener(e -> {
             String testo = searchBar.getSearchText().trim();
             System.out.println("Ricerca attivata: " + testo);
-//  Stop real-time della linea precedente quando faccio una nuova ricerca
+            //  Stop real-time della linea precedente quando faccio una nuova ricerca
             if (mapController != null) {
                 mapController.fermaAggiornamentoRealtimeBus();
             }
@@ -354,9 +398,8 @@ public class Mappa extends JFrame {
         });
     }
 
-
     // Nasconde tutti i pannelli laterali e rende visibile solo quello passato come parametro
-// Se panelToShow è null, tutti i pannelli vengono chiusi
+    // Se panelToShow è null, tutti i pannelli vengono chiusi
     private void showOnly(JPanel panelToShow) {
         favoritesPanel.setVisible(false);
         userProfilePanel.setVisible(false);
@@ -413,7 +456,6 @@ public class Mappa extends JFrame {
         });
     }
 
-
     private void applyTheme(String colorTheme) {
         searchBar.updateTheme(colorTheme);
         resultsPanel.updateTheme(colorTheme);
@@ -451,6 +493,7 @@ public class Mappa extends JFrame {
 
         }
     }
+
     @Override
     public void dispose() {
         if (mapController != null) {
@@ -459,10 +502,26 @@ public class Mappa extends JFrame {
         super.dispose();
     }
 
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             Mappa frame = new Mappa();
         });
     }
+
+    // =========================
+    // METODI / GETTER PER TEST (serve per i test)
+    // =========================
+
+    void showOnlyForTest(JPanel panelToShow) { // serve per i test
+        showOnly(panelToShow); // serve per i test
+    }
+
+    void applyThemeForTest(String theme) { // serve per i test
+        applyTheme(theme); // serve per i test
+    }
+
+    FavoritesPanel getFavoritesPanelForTest() { return favoritesPanel; } // serve per i test
+    UserProfilePanel getUserProfilePanelForTest() { return userProfilePanel; } // serve per i test
+    SettingsPanel getSettingsPanelForTest() { return settingsPanel; } // serve per i test
+    ServiceQualityPanel getQualityPanelForTest() { return qualityPanel; } // serve per i test
 }

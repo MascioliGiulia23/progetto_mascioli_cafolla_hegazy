@@ -1,7 +1,3 @@
-//Questa classe si occupa solo di costruire tutti i componenti grafici
-// della mappa e di restituirli già pronti alla Mappa.
-// PRIMA: 60 righe di setup
-// DOPO:
 package view.frames;
 
 import org.jxmapviewer.JXMapViewer;
@@ -14,9 +10,13 @@ import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
-import javax.swing.*;
+
 import javax.swing.event.MouseInputListener;
 import java.io.File;
+
+// >>> NUOVE IMPORT (serve per i test)
+import java.util.Objects;              // serve per i test
+import java.util.function.Supplier;    // serve per i test
 
 /**
  * Classe di supporto per inizializzare e configurare JXMapViewer.
@@ -24,9 +24,46 @@ import java.io.File;
  */
 public class MapInitializer {
 
+    // =========================
+    // DIPENDENZE INIETTABILI (serve per i test)
+    // =========================
+
+    private static Supplier<java.util.Timer> timerFactory =
+            () -> new java.util.Timer(true); // serve per i test
+
+    private static Runnable connectivityCheck =
+            service.ConnectivityService::checkConnection; // serve per i test
+
+    private static boolean enableConnectivityTimer = true; // serve per i test
+
+    // ====== metodi SOLO per i test ======
+
+    static void setTimerFactoryForTest(Supplier<java.util.Timer> factory) { // serve per i test
+        timerFactory = Objects.requireNonNull(factory);
+    }
+
+    static void setConnectivityCheckForTest(Runnable runnable) { // serve per i test
+        connectivityCheck = Objects.requireNonNull(runnable);
+    }
+
+    static void setEnableConnectivityTimerForTest(boolean enabled) { // serve per i test
+        enableConnectivityTimer = enabled;
+    }
+
+    static void resetForTest() { // serve per i test
+        timerFactory = () -> new java.util.Timer(true);
+        connectivityCheck = service.ConnectivityService::checkConnection;
+        enableConnectivityTimer = true;
+    }
+
+    // =========================
+
     public static JXMapViewer creaMappaBase() {
         // usa HTTPS invece di HTTP per le tile di OpenStreetMap
-        TileFactoryInfo info = new OSMTileFactoryInfo("OpenStreetMap", "https://tile.openstreetmap.org");
+        TileFactoryInfo info = new OSMTileFactoryInfo(
+                "OpenStreetMap",
+                "https://tile.openstreetmap.org"
+        );
         DefaultTileFactory tileFactory = new DefaultTileFactory(info);
 
         // usa una cartella temporanea per la cache
@@ -47,18 +84,17 @@ public class MapInitializer {
         mapViewer.addKeyListener(new PanKeyListener(mapViewer));
         mapViewer.addMouseListener(new CenterMapListener(mapViewer));
 
-//
-//        // --- AVVIO CONTROLLO PERIODICO CONNETTIVITÀ --- //
-        java.util.Timer timer = new java.util.Timer(true);
-        timer.scheduleAtFixedRate(new java.util.TimerTask() {
-            @Override
-            public void run() {
-                service.ConnectivityService.checkConnection();
-            }
-        }, 0, 30000); // ogni 30 secondi
-
+        // --- AVVIO CONTROLLO PERIODICO CONNETTIVITÀ ---
+        if (enableConnectivityTimer) { // serve per i test
+            java.util.Timer timer = timerFactory.get(); // serve per i test
+            timer.scheduleAtFixedRate(new java.util.TimerTask() {
+                @Override
+                public void run() {
+                    connectivityCheck.run(); // serve per i test
+                }
+            }, 0, 30000);
+        }
 
         return mapViewer;
-
     }
 }

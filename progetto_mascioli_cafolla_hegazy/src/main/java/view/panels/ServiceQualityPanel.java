@@ -96,7 +96,7 @@ public class ServiceQualityPanel extends JPanel {
         contentPanel.removeAll();
 
         // ⭐ CONTROLLO CONNESSIONE
-        if (!service.ConnectivityService.isOnline()) {
+        if (!isOnline()) {
             mostraMessaggioOffline();
             return;
         }
@@ -153,7 +153,7 @@ public class ServiceQualityPanel extends JPanel {
         contentPanel.removeAll();
 
         // ⭐ CONTROLLO CONNESSIONE
-        if (!service.ConnectivityService.isOnline()) {
+        if (!isOnline()) {
             mostraMessaggioOffline();
             return;
         }
@@ -624,9 +624,6 @@ public class ServiceQualityPanel extends JPanel {
         g2d.drawRoundRect(0, 0, getWidth() - 2, getHeight() - 2, 20, 20);
     }
 
-
-
-
     public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
         this.onCloseListener = listener;
     }
@@ -682,5 +679,28 @@ public class ServiceQualityPanel extends JPanel {
             this.affidabilita = affidabilita;
             this.ritardoMedioGiornaliero = ritardoMedioGiornaliero;
         }
+    }
+
+    // ============================================================
+    // serve per i test (NON cambia la logica: default = ConnectivityService)
+    // ============================================================
+
+    protected boolean isOnline() {
+        return service.ConnectivityService.isOnline();
+    }
+
+    // serve per i test: leggere facilmente lo stato UI
+    String getTitoloTextForTest() {
+        return titolo.getText();
+    }
+
+    // serve per i test: accesso al contenuto mostrato
+    int getContentChildrenCountForTest() {
+        return contentPanel.getComponentCount();
+    }
+
+    // serve per i test: ritorna copia dei componenti contenuti
+    java.util.List<Component> getContentChildrenSnapshotForTest() {
+        return java.util.List.of(contentPanel.getComponents());
     }
 }

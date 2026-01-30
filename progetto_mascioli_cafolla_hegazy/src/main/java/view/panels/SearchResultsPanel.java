@@ -33,7 +33,6 @@ public class SearchResultsPanel extends JPanel {
     private java.util.function.Consumer<Fermate> onStopClickListener; // listener per fermate
     private java.util.function.Consumer<Route> onRouteClickListener; // listener per rotte
 
-
     // listener per click su fermata nella lista linea
     private java.util.function.Consumer<Fermate> onLineaStopClickListener;
 
@@ -65,7 +64,6 @@ public class SearchResultsPanel extends JPanel {
     public void setQualityPanel(ServiceQualityPanel panel) {
         this.qualityPanel = panel;
     }
-
 
     // Metodo setter per waypoint
     public void setWaypointDrawer(WaypointDrawer drawer, List<Fermate> fermate,
@@ -136,7 +134,6 @@ public class SearchResultsPanel extends JPanel {
 
         headerPanel.add(closeButton, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
-
 
         resultsContainer = new JPanel();
         resultsContainer.setLayout(new BoxLayout(resultsContainer, BoxLayout.Y_AXIS));
@@ -291,6 +288,7 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.revalidate();
         resultsContainer.repaint();
     }
+
     // ⭐ NUOVO: Aggiunge linee SENZA cancellare i risultati precedenti
     public void aggiungiRisultatiRotte(java.util.List<Route> rotte) {
         if (rotte == null || rotte.isEmpty()) {
@@ -339,10 +337,7 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.repaint();
     }
 
-
-
     // Classe interna per singolo risultato
-
     public static class ResultItem extends JPanel {
         private String title;
         private String description;
@@ -423,6 +418,10 @@ public class SearchResultsPanel extends JPanel {
         public interface OnItemClickListener {
             void onClick();
         }
+
+        void clickForTest() { // serve per i test
+            if (onItemClickListener != null) onItemClickListener.onClick(); // serve per i test
+        }
     }
 
     private static class OrarioRow {
@@ -469,7 +468,6 @@ public class SearchResultsPanel extends JPanel {
 
         LocalTime oraCorrente = LocalTime.now().minusMinutes(5); // ⭐ Include bus in ritardo
         LocalTime oraMax = oraCorrente.plusMinutes(65); // ⭐ Finestra 60 min effettivi (5 passati + 60 futuri)
-
 
         for (StopTime st : stopTimes) {
             stopTimePerFermata.computeIfAbsent(st.getStopId(), k -> new ArrayList<>()).add(st);
@@ -547,9 +545,6 @@ public class SearchResultsPanel extends JPanel {
         topPanel.add(favBtn);
         resultsContainer.add(topPanel);
 
-        // Posizionamento manuale dell'ID
-
-
         // RACCOLTA DATI - Unico loop ottimizzato
         List<OrarioRow> righe = new ArrayList<>();
         Set<String> orariGiaAggiunti = new HashSet<>();
@@ -625,7 +620,6 @@ public class SearchResultsPanel extends JPanel {
         }
 
         // ⭐ DECISIONE: Mostra RT se disponibili, altrimenti fallback a statico
-        // ⭐ DECISIONE: Mostra RT se disponibili, altrimenti fallback a statico
         List<OrarioRow> righeDaMostrare;
 
         if (!righeConRT.isEmpty()) {
@@ -641,13 +635,12 @@ public class SearchResultsPanel extends JPanel {
             // ⭐ Anche per lo statico: rimuovi duplicati linea+orario
             Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
             for (OrarioRow riga : righe) {
-                String chiaveUnica = riga.nomeLinea + "#" + riga.orarioFormattato.replaceAll("\\s*\\([^)]*\\)", ""); // Rimuove eventuali suffix tipo "(+5 min)"
+                String chiaveUnica = riga.nomeLinea + "#" + riga.orarioFormattato.replaceAll("\\s*\\([^)]*\\)", "");
                 mappaUnica.putIfAbsent(chiaveUnica, riga);
             }
             righeDaMostrare = new ArrayList<>(mappaUnica.values());
             System.out.println("[SearchResultsPanel] ⚠ Nessun dato RT, mostrando " + righeDaMostrare.size() + " orari statici (rimosse " + (righe.size() - righeDaMostrare.size()) + " duplicati)");
         }
-
 
         // ⭐ Converti in String[] per la tabella
         List<String[]> righeTabella = righeDaMostrare.stream()
@@ -677,20 +670,18 @@ public class SearchResultsPanel extends JPanel {
                 }
 
                 // Mostra intestazione con linea + direzione
-                // Mostra intestazione con linea + direzione
                 if (rottaCorrente != null && direzioneCorrente != null) {
                     JLabel infoLinea = new JLabel("Linea " + rottaCorrente.getRouteShortName() + " → \"" +
                             direzioneCorrente.getTripHeadsign() + "\"", SwingConstants.CENTER);
-                    infoLinea.setFont(new Font("Segoe UI", Font.BOLD, 13));  // ⭐ font più piccolo
+                    infoLinea.setFont(new Font("Segoe UI", Font.BOLD, 13));
                     infoLinea.setForeground(new Color(50, 50, 50));
 
-                    JPanel lineaPanel = new JPanel(new BorderLayout());  // ⭐ usa BorderLayout
+                    JPanel lineaPanel = new JPanel(new BorderLayout());
                     lineaPanel.setOpaque(false);
-                    lineaPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));  // ⭐ margini
-                    lineaPanel.add(infoLinea, BorderLayout.CENTER);  // ⭐ centra
+                    lineaPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                    lineaPanel.add(infoLinea, BorderLayout.CENTER);
                     resultsContainer.add(lineaPanel);
                 }
-
 
             } else {
                 // Caso normale (ricerca fermata)
@@ -727,20 +718,18 @@ public class SearchResultsPanel extends JPanel {
             tabella.setRowHeight(22);
 
             if (colonne.length == 3) {
-                tabella.getColumnModel().getColumn(0).setPreferredWidth(40);   // Linea (era 60)
-                tabella.getColumnModel().getColumn(1).setPreferredWidth(200);  // Direzione (era 310)
-                tabella.getColumnModel().getColumn(2).setPreferredWidth(100);  // Orario (era 150)
+                tabella.getColumnModel().getColumn(0).setPreferredWidth(40);
+                tabella.getColumnModel().getColumn(1).setPreferredWidth(200);
+                tabella.getColumnModel().getColumn(2).setPreferredWidth(100);
             } else {
-                tabella.getColumnModel().getColumn(0).setPreferredWidth(150);  // Solo orario (era 200)
+                tabella.getColumnModel().getColumn(0).setPreferredWidth(150);
             }
-
 
             JScrollPane scroll = new JScrollPane(tabella);
             scroll.setPreferredSize(new Dimension(360, 300));
             resultsContainer.add(scroll);
 
             if (qualityPanel != null && !righeTabella.isEmpty()) {
-                // ⭐ Converti la TABELLA VISUALIZZATA (data) in BusArrivo
                 java.util.List<ServiceQualityPanel.BusArrivo> busArriviList = new java.util.ArrayList<>();
 
                 for (int i = 0; i < data.length; i++) {
@@ -749,28 +738,21 @@ public class SearchResultsPanel extends JPanel {
                     String orarioStr;
 
                     if (colonne.length == 3) {
-                        // Caso normale: 3 colonne (Linea, Direzione, Orario)
                         nomeLinea = data[i][0];
                         direzione = data[i][1];
                         orarioStr = data[i][2];
                     } else {
-                        // ⭐ Caso LINEA: 1 colonna (solo Orario)
                         nomeLinea = (rottaCorrente != null) ? rottaCorrente.getRouteShortName() : "N/A";
                         direzione = (direzioneCorrente != null) ? direzioneCorrente.getTripHeadsign() : "";
-                        orarioStr = data[i][0];  // ⭐ QUI IL FIX! Usa data invece di riga!
+                        orarioStr = data[i][0];
                     }
 
-                    // Estrai ritardo dalla stringa formattata
                     int ritardoMin = estraiRitardo(orarioStr);
-
-                    // ⭐ Calcola affollamento basato su ritardo e orario
                     ServiceQualityPanel.AffollamentoBus affollamento = stimaAffollamento(ritardoMin, orarioStr);
 
-                    // Debug per verificare
                     System.out.println("DEBUG BusArrivo: linea=" + nomeLinea + ", orario=" + orarioStr +
                             ", ritardo=" + ritardoMin + " min, affollamento=" + affollamento);
 
-                    // Crea oggetto BusArrivo con tutti i dati
                     busArriviList.add(new ServiceQualityPanel.BusArrivo(
                             nomeLinea,
                             direzione,
@@ -780,7 +762,6 @@ public class SearchResultsPanel extends JPanel {
                     ));
                 }
 
-                // Aggiorna dashboard in modo asincrono
                 SwingUtilities.invokeLater(() -> {
                     qualityPanel.aggiornaPerFermata(fermata, busArriviList, new ArrayList<>());
                     if (!qualityPanel.isVisible()) {
@@ -788,7 +769,6 @@ public class SearchResultsPanel extends JPanel {
                     }
                 });
             }
-
         }
 
         // BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
@@ -802,16 +782,15 @@ public class SearchResultsPanel extends JPanel {
             });
             resultsContainer.add(backBtn);
         }
-        if ("RICERCA".equalsIgnoreCase(contesto)) {  // ⭐ RIMUOVI il check su ultimeFermate
+        if ("RICERCA".equalsIgnoreCase(contesto)) {
             JButton backBtn = new JButton("← Torna alle fermate");
             backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             backBtn.addActionListener(e -> {
                 clearResults();
                 ripristinando = true;
-                if (!ultimeFermate.isEmpty()) {  // ⭐ check spostato qui
+                if (!ultimeFermate.isEmpty()) {
                     aggiornaRisultati(ultimeFermate);
                 } else {
-                    // Fallback: mostra messaggio
                     JLabel msg = new JLabel("Nessuna fermata precedente.", SwingConstants.CENTER);
                     resultsContainer.add(msg);
                     resultsContainer.revalidate();
@@ -821,12 +800,9 @@ public class SearchResultsPanel extends JPanel {
             resultsContainer.add(backBtn);
         }
 
-
-
         resultsContainer.revalidate();
         resultsContainer.repaint();
     }
-
 
     // Aggiorna il pannello "I Miei Preferiti" nel frame principale
     private void aggiornaPannelloPreferiti(String username) {
@@ -849,12 +825,10 @@ public class SearchResultsPanel extends JPanel {
                 }
             }
         });
-
     }
 
     public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
         this.onCloseListener = listener;
-
     }
 
     public void mostraFermateLinea(Route rotta,
@@ -961,7 +935,7 @@ public class SearchResultsPanel extends JPanel {
             JTable tabella = new JTable(righe.toArray(new String[0][]), colonne);
             tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             tabella.setRowHeight(22);
-            tabella.getColumnModel().getColumn(0).setPreferredWidth(300); // Fermata
+            tabella.getColumnModel().getColumn(0).setPreferredWidth(300);
             tabella.setEnabled(true);
 
             tabella.addMouseListener(new MouseAdapter() {
@@ -1049,10 +1023,9 @@ public class SearchResultsPanel extends JPanel {
         resultsContainer.repaint();
     }
 
-// ═══════════════════════════════════════════════════════════
-// METODO HELPER - Estrai ritardo dalla stringa formattata
-// ═══════════════════════════════════════════════════════════
-
+    // ═══════════════════════════════════════════════════════════
+    // METODO HELPER - Estrai ritardo dalla stringa formattata
+    // ═══════════════════════════════════════════════════════════
     private int estraiRitardo(String orarioFormattato) {
         try {
             // Formato: "18:33 (+23 min)" o "18:33 (-5 min)" o "18:33 (On Time)"
@@ -1087,6 +1060,7 @@ public class SearchResultsPanel extends JPanel {
             return 0;
         }
     }
+
     private ServiceQualityPanel.AffollamentoBus stimaAffollamento(int ritardoMinuti, String orarioStr) {
         try {
             String oraPart = orarioStr.split("\\s+")[0];
@@ -1113,36 +1087,27 @@ public class SearchResultsPanel extends JPanel {
         }
     }
 
-//    private ServiceQualityPanel.AffollamentoBus stimaAffollamento(int ritardoMinuti, String orarioStr) {
-//        try {
-//            // Estrai l'ora dall'orario (formato "18:33 (+22 min)" o "18:33")
-//            String oraPart = orarioStr.split("\\s+")[0]; // Prende solo "18:33"
-//            String[] parts = oraPart.split(":");
-//            int ora = Integer.parseInt(parts[0]);
-//
-//            // Ore di punta: 7-9 e 17-19
-//            boolean oraDiPunta = (ora >= 7 && ora <= 9) || (ora >= 17 && ora <= 19);
-//
-//            if (oraDiPunta) {
-//                // In ora di punta, più ritardo = più affollato
-//                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.MOLTO_ALTO;
-//                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.ALTO;
-//                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.MEDIO;
-//                return ServiceQualityPanel.AffollamentoBus.MEDIO; // Comunque medio in ora di punta
-//            } else {
-//                // Fuori punta
-//                if (ritardoMinuti > 15) return ServiceQualityPanel.AffollamentoBus.ALTO;
-//                if (ritardoMinuti > 8) return ServiceQualityPanel.AffollamentoBus.MEDIO;
-//                if (ritardoMinuti > 3) return ServiceQualityPanel.AffollamentoBus.BASSO;
-//                return ServiceQualityPanel.AffollamentoBus.BASSO;
-//            }
-//
-//        } catch (Exception e) {
-//            System.err.println("ERRORE stimaAffollamento per orario: " + orarioStr);
-//            e.printStackTrace();
-//            return ServiceQualityPanel.AffollamentoBus.SCONOSCIUTO;
-//        }
-//    }
+    // ==================================================
+    // AGGIUNTE (serve per i test)
+    // ==================================================
 
+    JPanel getResultsContainerForTest() { // serve per i test
+        return resultsContainer; // serve per i test
+    }
+
+    JButton getCloseButtonForTest() { // serve per i test
+        return closeButton; // serve per i test
+    }
+
+    int getResultsCountForTest() { // serve per i test
+        return results.size(); // serve per i test
+    }
+
+    java.util.List<ResultItem> getResultsSnapshotForTest() { // serve per i test
+        return new ArrayList<>(results); // serve per i test
+    }
+
+    int estraiRitardoForTest(String s) { // serve per i test
+        return estraiRitardo(s); // serve per i test
+    }
 }
-

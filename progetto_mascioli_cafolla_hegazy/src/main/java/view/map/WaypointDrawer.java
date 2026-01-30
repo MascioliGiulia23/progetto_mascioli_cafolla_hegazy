@@ -7,9 +7,7 @@ import org.jxmapviewer.viewer.GeoPosition;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +16,11 @@ public class WaypointDrawer {
     private final JXMapViewer mapViewer;
     private final Set<BusWaypoint> waypoints = new HashSet<>();
     private final RouteDrawer routeDrawer;
+
+    // =========================
+    // AGGIUNTA (serve per i test)
+    // =========================
+    private Painter<JXMapViewer> lastOverlayPainterForTest = null; // serve per i test
 
     public WaypointDrawer(JXMapViewer mapViewer, RouteDrawer routeDrawer) {
         this.mapViewer = mapViewer;
@@ -70,15 +73,41 @@ public class WaypointDrawer {
             CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(allPainters);
             mapViewer.setOverlayPainter(compoundPainter);
 
+            // =========================
+            // AGGIUNTA (serve per i test)
+            // =========================
+            lastOverlayPainterForTest = compoundPainter; // serve per i test
+
             System.out.println("✓ Linea + waypoint disegnati correttamente.");
         } else {
             mapViewer.setOverlayPainter(null);
+
+            // =========================
+            // AGGIUNTA (serve per i test)
+            // =========================
+            lastOverlayPainterForTest = null; // serve per i test
         }
     }
 
-    /**
-     * Classe interna che disegna i waypoint sulla mappa
-     */
+    // ==================================================
+    // METODI DI SUPPORTO (serve per i test)
+    // ==================================================
+
+    int getWaypointsCountForTest() {          // serve per i test
+        return waypoints.size();
+    }
+
+    Set<BusWaypoint> getWaypointsSnapshotForTest() { // serve per i test
+        return Collections.unmodifiableSet(new HashSet<>(waypoints));
+    }
+
+    Painter<JXMapViewer> getLastOverlayPainterForTest() { // serve per i test
+        return lastOverlayPainterForTest;
+    }
+
+    // ==================================================
+    // CLASSE INTERNA DI DISEGNO (INTOCCATA)
+    // ==================================================
     private static class WaypointPainter implements Painter<JXMapViewer> {
         private final Set<BusWaypoint> waypoints;
 
@@ -99,10 +128,8 @@ public class WaypointDrawer {
                 Point2D pt = map.getTileFactory().geoToPixel(gp, map.getZoom());
 
                 if (waypoint.getType() == BusWaypoint.WaypointType.STOP) {
-                    // Disegna fermata (cerchio rosso)
                     drawStopWaypoint(g, pt);
                 } else if (waypoint.getType() == BusWaypoint.WaypointType.REALTIME_BUS) {
-                    // Disegna bus real-time (pallino verde)
                     drawBusWaypoint(g, pt, waypoint.getBearing());
                 }
             }
@@ -111,7 +138,6 @@ public class WaypointDrawer {
         }
 
         private void drawStopWaypoint(Graphics2D g, Point2D pt) {
-            // Cerchio rosso per fermata
             g.setColor(new Color(255, 100, 100, 200));
             g.fillOval((int) pt.getX() - 8, (int) pt.getY() - 8, 16, 16);
 
@@ -123,18 +149,14 @@ public class WaypointDrawer {
             g.fillOval((int) pt.getX() - 3, (int) pt.getY() - 3, 6, 6);
         }
 
-        // ⭐ METODO MODIFICATO: pallino verde invece di triangolo blu
         private void drawBusWaypoint(Graphics2D g, Point2D pt, float bearing) {
-            // Cerchio verde principale
-            g.setColor(new Color(76, 175, 80, 230)); // Verde Material Design
+            g.setColor(new Color(76, 175, 80, 230));
             g.fillOval((int) pt.getX() - 10, (int) pt.getY() - 10, 20, 20);
 
-            // Bordo verde scuro
-            g.setColor(new Color(27, 94, 32, 255)); // Verde scuro
+            g.setColor(new Color(27, 94, 32, 255));
             g.setStroke(new BasicStroke(2));
             g.drawOval((int) pt.getX() - 10, (int) pt.getY() - 10, 20, 20);
 
-            // Pallino bianco al centro (per dare profondità)
             g.setColor(Color.WHITE);
             g.fillOval((int) pt.getX() - 4, (int) pt.getY() - 4, 8, 8);
         }

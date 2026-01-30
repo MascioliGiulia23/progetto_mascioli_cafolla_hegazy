@@ -1,7 +1,7 @@
 package view;
 
-import view.frames.Mappa;
 
+import view.frames.Mappa;
 
 public class Jframe {
 
