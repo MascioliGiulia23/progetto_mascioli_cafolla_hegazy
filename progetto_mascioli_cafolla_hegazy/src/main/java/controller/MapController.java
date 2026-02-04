@@ -184,7 +184,7 @@ public class MapController {
         GeoPosition center = mapViewer.getAddressLocation();
         mapViewer.setAddressLocation(new GeoPosition(center.getLatitude() - 0.01, center.getLongitude() - 0.025));
 
-        // ⭐ AVVIA AGGIORNAMENTO REAL-TIME DEI BUS
+        // AVVIA AGGIORNAMENTO REAL-TIME DEI BUS
         avviaAggiornamentoRealtimeBus(rotta, trip);
 
     }
@@ -260,7 +260,7 @@ public class MapController {
             System.out.println("[Real-time] Timer fermato");
         }
 
-        // ⭐ NUOVO: rimuovi anche i waypoint dei bus
+        // NUOVO: rimuovi anche i waypoint dei bus
         if (waypointDrawer != null) {
             waypointDrawer.clearRealtimeBusWaypoints();
             System.out.println("[Real-time] Waypoint bus rimossi");

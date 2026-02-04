@@ -1,45 +1,47 @@
 package view.panels;
 
-import javax.swing.SwingUtilities;
+import view.panels.search.SearchItem;
+import view.panels.search.SearchResultsView;
+import view.panels.search.StopScheduleEngine;
+import view.panels.search.LineStopsViewBuilder;
+import view.panels.search.FavoritesSupport;
+import view.panels.search.WaypointSupport;
+import view.panels.search.ServiceQualitySupport;
 
 import model.gtfs.*;
 import model.user.Favorite;
 import model.user.UserManager;
-import org.jxmapviewer.viewer.GeoPosition;
-import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+
 import java.util.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
 public class SearchResultsPanel extends JPanel {
-    private JPanel resultsContainer;
-    private JScrollPane scrollPane;
-    private List<ResultItem> results;
+    private List<SearchItem> results;
+
+    private SearchResultsView view;
+    private StopScheduleEngine stopScheduleEngine;
+    private LineStopsViewBuilder lineStopsViewBuilder;
+    private WaypointSupport waypointSupport;
+    private ServiceQualitySupport serviceQualitySupport;
+
     // METODO MOSTRA FERMATE INDIETRO
     private java.util.List<Fermate> ultimeFermate = new java.util.ArrayList<>();
     private java.util.List<Route> ultimeRotte = new java.util.ArrayList<>();
     private boolean ripristinando = false;
     private String currentTheme = "Blu";
-    private JButton closeButton;
-    private java.util.function.Consumer<Void> onCloseListener;
 
+    private java.util.function.Consumer<Void> onCloseListener;
     private java.util.function.Consumer<Fermate> onStopClickListener; // listener per fermate
     private java.util.function.Consumer<Route> onRouteClickListener; // listener per rotte
-
-    // listener per click su fermata nella lista linea
-    private java.util.function.Consumer<Fermate> onLineaStopClickListener;
+    private java.util.function.Consumer<Fermate> onLineaStopClickListener;    // listener per click su fermata nella lista linea
 
     public void setOnLineaStopClickListener(java.util.function.Consumer<Fermate> listener) {
         this.onLineaStopClickListener = listener;
     }
-
     // Campi per waypoint
     private WaypointDrawer waypointDrawer;
     private RouteDrawer routeDrawer;
@@ -59,6 +61,8 @@ public class SearchResultsPanel extends JPanel {
 
     public void setDelayService(service.RealTimeDelayService service) {
         this.delayService = service;
+        if (stopScheduleEngine == null) stopScheduleEngine = new StopScheduleEngine(service);
+        else stopScheduleEngine.setDelayService(service);
     }
 
     public void setQualityPanel(ServiceQualityPanel panel) {
@@ -95,66 +99,21 @@ public class SearchResultsPanel extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(false);
 
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 3, 10));
+        view = new SearchResultsView();
+        lineStopsViewBuilder = new LineStopsViewBuilder();
+        waypointSupport = new WaypointSupport();
+        serviceQualitySupport = new ServiceQualitySupport();
 
-        JLabel titleLabel = new JLabel("Risultati");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        titleLabel.setForeground(new Color(50, 50, 50));
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-
-        // Bottone X (stile identico a FavoritesPanel)
-        closeButton = new JButton("x");
-        closeButton.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        closeButton.setForeground(Color.DARK_GRAY);
-        closeButton.setFocusPainted(false);
-        closeButton.setContentAreaFilled(false);
-        closeButton.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
-        closeButton.setPreferredSize(new Dimension(25, 25));
-        closeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        closeButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                closeButton.setForeground(Color.RED);
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                closeButton.setForeground(Color.DARK_GRAY);
-            }
-        });
-
-        closeButton.addActionListener(e -> {
+        // collega la X al tuo listener esistente
+        view.getCloseButton().addActionListener(e -> {
             if (onCloseListener != null) {
                 onCloseListener.accept(null);
             }
         });
 
-        headerPanel.add(closeButton, BorderLayout.EAST);
-        add(headerPanel, BorderLayout.NORTH);
-
-        resultsContainer = new JPanel();
-        resultsContainer.setLayout(new BoxLayout(resultsContainer, BoxLayout.Y_AXIS));
-        resultsContainer.setOpaque(false);
-
-        scrollPane = new JScrollPane(resultsContainer);
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.setBorder(null);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-        scrollPane.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
-            @Override
-            protected void configureScrollBarColors() {
-                this.thumbColor = new Color(180, 180, 180);
-            }
-        });
-
-        add(scrollPane, BorderLayout.CENTER);
+        add(view, BorderLayout.CENTER);
     }
+
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -182,26 +141,26 @@ public class SearchResultsPanel extends JPanel {
 
     // Aggiunge un risultato generico
     public void addResult(String title, String description, String icon, Fermate fermata) {
-        ResultItem item = new ResultItem(title, description, icon, currentTheme, fermata);
+        SearchItem item = new SearchItem(title, description, icon, currentTheme, fermata);
         item.setOnClickListener(() -> {
             if (fermata != null && onStopClickListener != null) {
                 onStopClickListener.accept(fermata);
             }
         });
         results.add(item);
-        resultsContainer.add(item);
+        view.getResultsContainer().add(item);
     }
 
     // Pulisce la lista
     public void clearResults() {
-        resultsContainer.removeAll();
+        view.getResultsContainer().removeAll();
         results.clear();
     }
 
     // Aggiorna i colori
     public void updateTheme(String theme) {
         this.currentTheme = theme;
-        for (ResultItem item : results) {
+        for (SearchItem item : results) {
             item.updateTheme(theme);
         }
         repaint();
@@ -211,8 +170,8 @@ public class SearchResultsPanel extends JPanel {
     public void aggiornaRisultati(List<Fermate> fermate) {
         clearResults();
         if (fermate == null || fermate.isEmpty()) {
-            resultsContainer.revalidate();
-            resultsContainer.repaint();
+            view.getResultsContainer().revalidate();
+            view.getResultsContainer().repaint();
             return;
         }
 
@@ -231,16 +190,16 @@ public class SearchResultsPanel extends JPanel {
             addResult(f.getStopName(), descrizione, "", f);
         }
 
-        resultsContainer.revalidate();
-        resultsContainer.repaint();
+        view.getResultsContainer().revalidate();
+        view.getResultsContainer().repaint();
     }
 
     // Mostra le linee (rotte)
     public void aggiornaRisultatiRotte(java.util.List<Route> rotte) {
         clearResults();
         if (rotte == null || rotte.isEmpty()) {
-            resultsContainer.revalidate();
-            resultsContainer.repaint();
+            view.getResultsContainer().revalidate();
+            view.getResultsContainer().repaint();
             return;
         }
 
@@ -273,7 +232,7 @@ public class SearchResultsPanel extends JPanel {
 
             String descrizione = "ID: " + r.getRouteId() + "  (" + tipo + ")";
 
-            ResultItem item = new ResultItem(nomeLinea, descrizione, "", currentTheme, null);
+            SearchItem item = new SearchItem(nomeLinea, descrizione, "", currentTheme, null);
             item.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
 
             item.setOnClickListener(() -> {
@@ -283,13 +242,13 @@ public class SearchResultsPanel extends JPanel {
             });
 
             results.add(item);
-            resultsContainer.add(item);
+            view.getResultsContainer().add(item);
         }
-        resultsContainer.revalidate();
-        resultsContainer.repaint();
+        view.getResultsContainer().revalidate();
+        view.getResultsContainer().repaint();
     }
 
-    // ⭐ NUOVO: Aggiunge linee SENZA cancellare i risultati precedenti
+    // Aggiunge linee SENZA cancellare i risultati precedenti
     public void aggiungiRisultatiRotte(java.util.List<Route> rotte) {
         if (rotte == null || rotte.isEmpty()) {
             return;
@@ -321,7 +280,7 @@ public class SearchResultsPanel extends JPanel {
             }
 
             String descrizione = "ID: " + r.getRouteId() + " (" + tipo + ")";
-            ResultItem item = new ResultItem(nomeLinea, descrizione, "", currentTheme, null);
+            SearchItem item = new SearchItem(nomeLinea, descrizione, "", currentTheme, null);
             item.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
             item.setOnClickListener(() -> {
                 if (onRouteClickListener != null) {
@@ -330,117 +289,14 @@ public class SearchResultsPanel extends JPanel {
             });
 
             results.add(item);
-            resultsContainer.add(item);
+            view.getResultsContainer().add(item);
         }
 
-        resultsContainer.revalidate();
-        resultsContainer.repaint();
+        view.getResultsContainer().revalidate();
+        view.getResultsContainer().repaint();
     }
 
-    // Classe interna per singolo risultato
-    public static class ResultItem extends JPanel {
-        private String title;
-        private String description;
-        private String icon;
-        private String currentTheme;
-        private Fermate fermata;
-        private OnItemClickListener onItemClickListener;
-        private boolean isHovered = false;
 
-        public ResultItem(String title, String description, String icon, String theme, Fermate fermata) {
-            this.title = title;
-            this.description = description;
-            this.icon = icon;
-            this.currentTheme = theme;
-            this.fermata = fermata;
-            initializeUI();
-        }
-
-        private void initializeUI() {
-            setLayout(new BorderLayout(10, 0));
-            setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
-            setOpaque(false);
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            JLabel iconLabel = new JLabel(icon);
-            iconLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-            add(iconLabel, BorderLayout.WEST);
-
-            JPanel infoPanel = new JPanel();
-            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-            infoPanel.setOpaque(false);
-
-            JLabel titleLabel = new JLabel(title);
-            titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            titleLabel.setForeground(new Color(50, 50, 50));
-            infoPanel.add(titleLabel);
-
-            JLabel descriptionLabel = new JLabel(description);
-            descriptionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            descriptionLabel.setForeground(new Color(120, 120, 120));
-            infoPanel.add(Box.createVerticalStrut(4));
-            infoPanel.add(descriptionLabel);
-
-            add(infoPanel, BorderLayout.CENTER);
-
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    isHovered = true;
-                    setBackground(new Color(245, 245, 245));
-                    setOpaque(true);
-                    repaint();
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    isHovered = false;
-                    setOpaque(false);
-                    repaint();
-                }
-
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (onItemClickListener != null) onItemClickListener.onClick();
-                }
-            });
-        }
-
-        public void updateTheme(String theme) {
-            this.currentTheme = theme;
-        }
-
-        public void setOnClickListener(OnItemClickListener listener) {
-            this.onItemClickListener = listener;
-        }
-
-        public interface OnItemClickListener {
-            void onClick();
-        }
-
-        void clickForTest() { // serve per i test
-            if (onItemClickListener != null) onItemClickListener.onClick(); // serve per i test
-        }
-    }
-
-    private static class OrarioRow {
-        String nomeLinea;
-        String direzione;
-        String orarioFormattato;
-        String tripId;  // ⭐ CHIAVE per matching real-time
-
-        OrarioRow(String nomeLinea, String direzione, String orarioFormattato, String tripId) {
-            this.nomeLinea = nomeLinea;
-            this.direzione = direzione;
-            this.orarioFormattato = orarioFormattato;
-            this.tripId = tripId;
-        }
-
-        String[] toArray() {
-            return new String[]{nomeLinea, direzione, orarioFormattato};
-        }
-    }
 
     // metodo per mostrare le fermate
     public void mostraOrariFermata(Fermate fermata,
@@ -453,6 +309,10 @@ public class SearchResultsPanel extends JPanel {
                                    String contesto) {
         clearResults();
 
+        if (stopScheduleEngine == null) {
+            stopScheduleEngine = new StopScheduleEngine(delayService);
+        }
+
         // Mappe hash per lookups O(1)
         Map<String, Trip> tripMap = new HashMap<>(trips.size());
         Map<String, Route> routeMap = new HashMap<>(rotte.size());
@@ -462,57 +322,22 @@ public class SearchResultsPanel extends JPanel {
         for (Route route : rotte) routeMap.put(route.getRouteId(), route);
         for (Fermate f : tutteLeFermate) fermatePerId.put(f.getStopId(), f);
 
-        // Indice stopTimes per fermata
+        // Indice stopTimes per fermata (serve per WAYPOINTS)
         Map<String, List<StopTime>> stopTimePerFermata = new HashMap<>();
-        Map<String, StopTime> ultimoStopPerTrip = new HashMap<>();
-
-        LocalTime oraCorrente = LocalTime.now().minusMinutes(5); // ⭐ Include bus in ritardo
-        LocalTime oraMax = oraCorrente.plusMinutes(65); // ⭐ Finestra 60 min effettivi (5 passati + 60 futuri)
 
         for (StopTime st : stopTimes) {
             stopTimePerFermata.computeIfAbsent(st.getStopId(), k -> new ArrayList<>()).add(st);
-
-            String tripId = st.getTripId();
-            StopTime existing = ultimoStopPerTrip.get(tripId);
-            if (existing == null || st.getStopSequence() > existing.getStopSequence()) {
-                ultimoStopPerTrip.put(tripId, st);
-            }
-        }
-
-        // PRE-CALCOLO CAPOLINEA
-        Map<String, String> capolineaPerTrip = new HashMap<>();
-        for (Map.Entry<String, StopTime> entry : ultimoStopPerTrip.entrySet()) {
-            Fermate capolinea = fermatePerId.get(entry.getValue().getStopId());
-            if (capolinea != null) {
-                capolineaPerTrip.put(entry.getKey(), capolinea.getStopName());
-            }
         }
 
         // WAYPOINTS - Loop minimo
-        if (waypointDrawer != null) {
-            waypointDrawer.clearWaypoints();
-            Set<BusWaypoint> waypoints = new HashSet<>();
-
-            List<StopTime> fermataStops = stopTimePerFermata.get(fermata.getStopId());
-            if (fermataStops != null) {
-                GeoPosition pos = new GeoPosition(fermata.getStopLat(), fermata.getStopLon());
-                boolean hasValidTrip = false;
-
-                for (StopTime st : fermataStops) {
-                    if (tripMap.containsKey(st.getTripId()) &&
-                            routeMap.containsKey(tripMap.get(st.getTripId()).getRouteId())) {
-                        hasValidTrip = true;
-                        break;
-                    }
-                }
-
-                if (hasValidTrip) {
-                    waypoints.add(new BusWaypoint(pos));
-                    waypointDrawer.addWaypoints(waypoints);
-                }
-            }
-        }
-
+        if (waypointSupport == null) waypointSupport = new WaypointSupport();
+        waypointSupport.updateStopWaypoint(
+                waypointDrawer,
+                fermata,
+                tripMap,
+                routeMap,
+                stopTimePerFermata
+        );
         // Titolo + bottone preferiti
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 3));
         topPanel.setOpaque(false);
@@ -538,124 +363,30 @@ public class SearchResultsPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Fermata aggiunta ai preferiti!");
             }
 
-            aggiornaPannelloPreferiti(user);
+            FavoritesSupport.refreshFavoritesPanel(this, user);
+
         });
 
         topPanel.add(titolo);
         topPanel.add(favBtn);
-        resultsContainer.add(topPanel);
+        view.getResultsContainer().add(topPanel);
 
-        // RACCOLTA DATI - Unico loop ottimizzato
-        List<OrarioRow> righe = new ArrayList<>();
-        Set<String> orariGiaAggiunti = new HashSet<>();
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+        List<String[]> righeTabella = stopScheduleEngine.calcolaRigheTabella(
+                fermata,
+                stopTimes,
+                trips,
+                rotte,
+                tutteLeFermate
+        );
 
-        List<StopTime> fermataStops = stopTimePerFermata.get(fermata.getStopId());
-        if (fermataStops != null) {
-            for (StopTime st : fermataStops) {
-                if (st.getArrivalTime() == null) continue;
-
-                LocalTime arrivo = st.getArrivalTime();
-                if (arrivo.isBefore(oraCorrente) || arrivo.isAfter(oraMax)) continue;
-
-                Trip trip = tripMap.get(st.getTripId());
-                if (trip == null) continue;
-
-                Route route = routeMap.get(trip.getRouteId());
-                if (route == null) continue;
-
-                String nomeLinea = route.getRouteShortName();
-                String orarioFormattato = arrivo.format(fmt);
-                String tripId = st.getTripId();
-                String chiave = nomeLinea + "|" + orarioFormattato + "|" + tripId;
-
-                if (orariGiaAggiunti.add(chiave)) {
-                    String capolineaNome = capolineaPerTrip.getOrDefault(tripId, "?");
-                    String direzione = " → " + capolineaNome;
-                    righe.add(new OrarioRow(nomeLinea, direzione, orarioFormattato, tripId));
-                }
-            }
-        }
-
-        // ⭐ CARICA RITARDI REAL-TIME
-        List<OrarioRow> righeConRT = new ArrayList<>();
-
-        if (delayService != null && service.ConnectivityService.isOnline()) {
-            try {
-                System.out.println("═══════════════════════════════════════════════");
-                System.out.println("[SearchResultsPanel] Richiesta ritardi per fermata: " + fermata.getStopId());
-
-                Map<String, Integer> delaysByLineaOrario = delayService.getDelaysByTripId(fermata.getStopId());
-                System.out.println("[SearchResultsPanel] Ritardi ricevuti per " + delaysByLineaOrario.size() + " combinazioni");
-
-                // ⭐ FILTRA: Tieni SOLO le righe con dati RT
-                for (OrarioRow riga : righe) {
-                    String chiaveRT = riga.nomeLinea + "#" + riga.orarioFormattato;
-                    Integer delaySeconds = delaysByLineaOrario.get(chiaveRT);
-
-                    if (delaySeconds != null) {
-                        int minutes = delaySeconds / 60;
-
-                        if (Math.abs(minutes) > 1) {
-                            if (minutes > 0) {
-                                riga.orarioFormattato = riga.orarioFormattato + "  (+" + minutes + " min)";
-                            } else {
-                                riga.orarioFormattato = riga.orarioFormattato + "  (" + minutes + " min)";
-                            }
-                        } else {
-                            riga.orarioFormattato = riga.orarioFormattato + "  (On Time)";
-                        }
-
-                        righeConRT.add(riga);
-                        System.out.println("[SearchResultsPanel] ✓ Linea " + riga.nomeLinea + " orario " + riga.orarioFormattato);
-                    }
-                }
-
-                System.out.println("═══════════════════════════════════════════════");
-
-            } catch (Exception e) {
-                System.err.println("[SearchResultsPanel] ✗ Errore caricamento ritardi: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        // ⭐ DECISIONE: Mostra RT se disponibili, altrimenti fallback a statico
-        List<OrarioRow> righeDaMostrare;
-
-        if (!righeConRT.isEmpty()) {
-            // ⭐ RIMUOVI DUPLICATI: Una sola riga per linea+orario
-            Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
-            for (OrarioRow riga : righeConRT) {
-                String chiaveUnica = riga.nomeLinea + "#" + riga.orarioFormattato;
-                mappaUnica.putIfAbsent(chiaveUnica, riga); // Tiene solo la prima
-            }
-            righeDaMostrare = new ArrayList<>(mappaUnica.values());
-            System.out.println("[SearchResultsPanel] ✓ Mostrando " + righeDaMostrare.size() + " linee REAL-TIME (rimosse " + (righeConRT.size() - righeDaMostrare.size()) + " duplicati)");
-        } else {
-            // ⭐ Anche per lo statico: rimuovi duplicati linea+orario
-            Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
-            for (OrarioRow riga : righe) {
-                String chiaveUnica = riga.nomeLinea + "#" + riga.orarioFormattato.replaceAll("\\s*\\([^)]*\\)", "");
-                mappaUnica.putIfAbsent(chiaveUnica, riga);
-            }
-            righeDaMostrare = new ArrayList<>(mappaUnica.values());
-            System.out.println("[SearchResultsPanel] ⚠ Nessun dato RT, mostrando " + righeDaMostrare.size() + " orari statici (rimosse " + (righe.size() - righeDaMostrare.size()) + " duplicati)");
-        }
-
-        // ⭐ Converti in String[] per la tabella
-        List<String[]> righeTabella = righeDaMostrare.stream()
-                .map(OrarioRow::toArray)
-                .collect(java.util.stream.Collectors.toList());
-
-        righeTabella.sort(Comparator.comparing(arr -> arr[2]));
-        resultsContainer.add(Box.createVerticalStrut(-5));
+        view.getResultsContainer().add(Box.createVerticalStrut(-5));
 
         if (righeTabella.isEmpty()) {
             JLabel noResult = new JLabel("Nessun arrivo nei prossimi 40 minuti.", SwingConstants.CENTER);
             noResult.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noResult.setForeground(Color.DARK_GRAY);
 
-            resultsContainer.add(noResult);
+            view.getResultsContainer().add(noResult);
 
         } else {
             // Se arrivo da "LINEA" → mostro solo la colonna Orario arrivo
@@ -680,7 +411,7 @@ public class SearchResultsPanel extends JPanel {
                     lineaPanel.setOpaque(false);
                     lineaPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
                     lineaPanel.add(infoLinea, BorderLayout.CENTER);
-                    resultsContainer.add(lineaPanel);
+                    view.getResultsContainer().add(lineaPanel);
                 }
 
             } else {
@@ -727,48 +458,21 @@ public class SearchResultsPanel extends JPanel {
 
             JScrollPane scroll = new JScrollPane(tabella);
             scroll.setPreferredSize(new Dimension(360, 300));
-            resultsContainer.add(scroll);
+            view.getResultsContainer().add(scroll);
 
-            if (qualityPanel != null && !righeTabella.isEmpty()) {
-                java.util.List<ServiceQualityPanel.BusArrivo> busArriviList = new java.util.ArrayList<>();
+            if (qualityPanel != null && data.length > 0) {
+                if (serviceQualitySupport == null) serviceQualitySupport = new ServiceQualitySupport();
 
-                for (int i = 0; i < data.length; i++) {
-                    String nomeLinea;
-                    String direzione;
-                    String orarioStr;
-
-                    if (colonne.length == 3) {
-                        nomeLinea = data[i][0];
-                        direzione = data[i][1];
-                        orarioStr = data[i][2];
-                    } else {
-                        nomeLinea = (rottaCorrente != null) ? rottaCorrente.getRouteShortName() : "N/A";
-                        direzione = (direzioneCorrente != null) ? direzioneCorrente.getTripHeadsign() : "";
-                        orarioStr = data[i][0];
-                    }
-
-                    int ritardoMin = estraiRitardo(orarioStr);
-                    ServiceQualityPanel.AffollamentoBus affollamento = stimaAffollamento(ritardoMin, orarioStr);
-
-                    System.out.println("DEBUG BusArrivo: linea=" + nomeLinea + ", orario=" + orarioStr +
-                            ", ritardo=" + ritardoMin + " min, affollamento=" + affollamento);
-
-                    busArriviList.add(new ServiceQualityPanel.BusArrivo(
-                            nomeLinea,
-                            direzione,
-                            orarioStr,
-                            ritardoMin,
-                            affollamento
-                    ));
-                }
-
-                SwingUtilities.invokeLater(() -> {
-                    qualityPanel.aggiornaPerFermata(fermata, busArriviList, new ArrayList<>());
-                    if (!qualityPanel.isVisible()) {
-                        qualityPanel.setVisible(true);
-                    }
-                });
+                serviceQualitySupport.updateQualityPanel(
+                        qualityPanel,
+                        fermata,
+                        colonne,
+                        data,
+                        rottaCorrente,
+                        direzioneCorrente
+                );
             }
+
         }
 
         // BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
@@ -780,7 +484,7 @@ public class SearchResultsPanel extends JPanel {
                 ripristinando = true;
                 mostraFermateLinea(rottaCorrente, direzioneCorrente, tuttiITrips, tuttiGliStopTimes, tutteLeFermate);
             });
-            resultsContainer.add(backBtn);
+            view.getResultsContainer().add(backBtn);
         }
         if ("RICERCA".equalsIgnoreCase(contesto)) {
             JButton backBtn = new JButton("← Torna alle fermate");
@@ -792,39 +496,16 @@ public class SearchResultsPanel extends JPanel {
                     aggiornaRisultati(ultimeFermate);
                 } else {
                     JLabel msg = new JLabel("Nessuna fermata precedente.", SwingConstants.CENTER);
-                    resultsContainer.add(msg);
-                    resultsContainer.revalidate();
-                    resultsContainer.repaint();
+                    view.getResultsContainer().add(msg);
+                    view.getResultsContainer().revalidate();
+                    view.getResultsContainer().repaint();
                 }
             });
-            resultsContainer.add(backBtn);
+            view.getResultsContainer().add(backBtn);
         }
 
-        resultsContainer.revalidate();
-        resultsContainer.repaint();
-    }
-
-    // Aggiorna il pannello "I Miei Preferiti" nel frame principale
-    private void aggiornaPannelloPreferiti(String username) {
-        if (username == null || username.isEmpty()) return;
-
-        SwingUtilities.invokeLater(() -> {
-            Window window = SwingUtilities.getWindowAncestor(this);
-            if (!(window instanceof JFrame frame)) return;
-
-            Container content = frame.getContentPane();
-            for (Component comp : content.getComponents()) {
-                if (comp instanceof JLayeredPane lp) {
-                    for (Component sub : lp.getComponents()) {
-                        if (sub instanceof FavoritesPanel favPanel) {
-                            favPanel.caricaPreferiti();
-                            System.out.println(" Preferiti aggiornati per " + username);
-                            return;
-                        }
-                    }
-                }
-            }
-        });
+        view.getResultsContainer().revalidate();
+        view.getResultsContainer().repaint();
     }
 
     public void setOnCloseListener(java.util.function.Consumer<Void> listener) {
@@ -839,275 +520,88 @@ public class SearchResultsPanel extends JPanel {
 
         clearResults();
 
-        // Crea mappa per ricerche O(1)
-        Map<String, Fermate> fermatePerId = new HashMap<>();
-        for (Fermate f : tutteLeFermate) {
-            fermatePerId.put(f.getStopId(), f);
+        if (lineStopsViewBuilder == null) {
+            lineStopsViewBuilder = new LineStopsViewBuilder();
         }
+        if (waypointSupport == null) waypointSupport = new WaypointSupport();
+        waypointSupport.updateLineWaypoints(
+                waypointDrawer,
+                direzioneScelta,
+                stopTimes,
+                tutteLeFermate
+        );
 
-        // Mostra waypoint di tutte le fermate della linea
-        if (waypointDrawer != null) {
-            waypointDrawer.clearWaypoints();
-            Set<BusWaypoint> waypoints = new HashSet<>();
 
-            List<StopTime> stopTrip = new ArrayList<>();
-            for (StopTime st : stopTimes) {
-                if (st.getTripId().equals(direzioneScelta.getTripId())) {
-                    stopTrip.add(st);
-                }
-            }
+        lineStopsViewBuilder.build(
+                view.getResultsContainer(),
+                waypointDrawer,
+                rotta,
+                direzioneScelta,
+                stopTimes,
+                tutteLeFermate,
+                fermata -> {
+                    Map<String, Trip> tripMap = new HashMap<>(tuttiITrips.size());
+                    for (Trip t : tuttiITrips) tripMap.put(t.getTripId(), t);
 
-            stopTrip.sort(Comparator.comparingInt(StopTime::getStopSequence));
+                    List<StopTime> stopTimesLineaEFermata = new ArrayList<>();
+                    for (StopTime st : tuttiGliStopTimes) {
+                        if (!st.getStopId().equals(fermata.getStopId())) continue;
 
-            for (StopTime st : stopTrip) {
-                Fermate f = fermatePerId.get(st.getStopId());
-                if (f != null) {
-                    GeoPosition pos = new GeoPosition(f.getStopLat(), f.getStopLon());
-                    waypoints.add(new BusWaypoint(pos));
-                }
-            }
-
-            if (!waypoints.isEmpty()) {
-                waypointDrawer.addWaypoints(waypoints);
-            }
-        }
-
-        // Titolo + bottone preferiti
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 3));
-        topPanel.setOpaque(false);
-        JLabel titolo = new JLabel("\"Linea " + rotta.getRouteShortName() + "\"");
-        titolo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        titolo.setOpaque(false);
-        JButton favBtn = new JButton(" Preferiti");
-        favBtn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        favBtn.addActionListener(e -> {
-            String user = UserProfilePanel.getCurrentUsernameStatic();
-            if (user == null) {
-                JOptionPane.showMessageDialog(this, "Effettua il login per aggiungere ai preferiti.");
-                return;
-            }
-
-            Favorite f = new Favorite(rotta.getRouteShortName(), "LINEA");
-            if (UserManager.haPreferito(user, f)) {
-                UserManager.rimuoviPreferito(user, f);
-                JOptionPane.showMessageDialog(this, "Linea rimossa dai preferiti!");
-            } else {
-                UserManager.aggiungiPreferito(user, f);
-                JOptionPane.showMessageDialog(this, "Linea aggiunta ai preferiti!");
-            }
-
-            aggiornaPannelloPreferiti(user);
-        });
-
-        topPanel.add(titolo);
-        topPanel.add(favBtn);
-        resultsContainer.add(topPanel);
-
-        JLabel dirLabel = new JLabel("Direzione: \"" + direzioneScelta.getTripHeadsign() + "\"", SwingConstants.CENTER);
-        dirLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        resultsContainer.add(dirLabel);
-
-        List<StopTime> stopTrip = new ArrayList<>();
-        for (StopTime st : stopTimes) {
-            if (st.getTripId().equals(direzioneScelta.getTripId())) {
-                stopTrip.add(st);
-            }
-        }
-
-        stopTrip.sort(Comparator.comparingInt(StopTime::getStopSequence));
-
-        String[] colonne = {"Fermata"};
-        List<String[]> righe = new ArrayList<>();
-        for (StopTime st : stopTrip) {
-            Fermate f = fermatePerId.get(st.getStopId());
-            if (f != null) {
-                righe.add(new String[]{f.getStopName()});
-            }
-        }
-
-        if (righe.isEmpty()) {
-            JLabel noResult = new JLabel("Nessuna fermata trovata per questa direzione.", SwingConstants.CENTER);
-            noResult.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-            noResult.setForeground(Color.DARK_GRAY);
-            resultsContainer.add(Box.createVerticalStrut(10));
-            resultsContainer.add(noResult);
-        } else {
-            JTable tabella = new JTable(righe.toArray(new String[0][]), colonne);
-            tabella.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tabella.setRowHeight(22);
-            tabella.getColumnModel().getColumn(0).setPreferredWidth(300);
-            tabella.setEnabled(true);
-
-            tabella.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    int riga = tabella.getSelectedRow();
-                    if (riga >= 0 && onLineaStopClickListener != null) {
-                        String nomeFermata = (String) tabella.getValueAt(riga, 0);
-                        Fermate fermataSelezionata = fermatePerId.get(
-                                tutteLeFermate.stream()
-                                        .filter(f -> f.getStopName().equalsIgnoreCase(nomeFermata))
-                                        .map(Fermate::getStopId)
-                                        .findFirst()
-                                        .orElse(null)
-                        );
-
-                        if (fermataSelezionata != null) {
-                            System.out.println("Fermata cliccata: " + fermataSelezionata.getStopName());
-                            onLineaStopClickListener.accept(fermataSelezionata);
+                        Trip trip = tripMap.get(st.getTripId());
+                        if (trip != null && trip.getRouteId().equals(rotta.getRouteId())) {
+                            stopTimesLineaEFermata.add(st);
                         }
                     }
-                }
-            });
 
-            JScrollPane scroll = new JScrollPane(tabella);
-            scroll.setPreferredSize(new Dimension(320, 300));
-            resultsContainer.add(scroll);
-
-            // ⭐ LISTENER: Quando clicchi su una fermata nella lista della linea
-            setOnLineaStopClickListener(fermata -> {
-                Map<String, Trip> tripMap = new HashMap<>(tuttiITrips.size());
-                for (Trip t : tuttiITrips) {
-                    tripMap.put(t.getTripId(), t);
-                }
-
-                // Filtra stopTimes per fermata e linea corrente
-                List<StopTime> stopTimesLineaEFermata = new ArrayList<>();
-                for (StopTime st : tuttiGliStopTimes) {
-                    if (!st.getStopId().equals(fermata.getStopId())) continue;
-
-                    Trip trip = tripMap.get(st.getTripId());
-                    if (trip != null && trip.getRouteId().equals(rotta.getRouteId())) {
-                        stopTimesLineaEFermata.add(st);
+                    mostraOrariFermata(
+                            fermata,
+                            stopTimesLineaEFermata,
+                            tuttiITrips,
+                            List.of(rotta),
+                            tutteLeFermate,
+                            rotta,
+                            direzioneScelta,
+                            "LINEA"
+                    );
+                },
+                () -> {
+                    clearResults();
+                    ripristinando = true;
+                    if (!ultimeRotte.isEmpty()) {
+                        aggiornaRisultatiRotte(ultimeRotte);
+                    } else {
+                        JLabel msg = new JLabel("Nessuna linea precedente trovata.", SwingConstants.CENTER);
+                        msg.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+                        msg.setForeground(Color.DARK_GRAY);
+                        view.getResultsContainer().add(msg);
+                        view.getResultsContainer().revalidate();
+                        view.getResultsContainer().repaint();
                     }
-                }
+                },
+                () -> togglePreferitoLinea(rotta)
+        );
 
-                // Mostra orari per quella fermata + linea
-                mostraOrariFermata(
-                        fermata,
-                        stopTimesLineaEFermata,
-                        tuttiITrips,
-                        List.of(rotta),
-                        tutteLeFermate,
-                        rotta,
-                        direzioneScelta,
-                        "LINEA"
-                );
-            });
+
+        view.getResultsContainer().revalidate();
+        view.getResultsContainer().repaint();
+    }
+
+    private void togglePreferitoLinea(Route rotta) {
+        String user = UserProfilePanel.getCurrentUsernameStatic();
+        if (user == null) {
+            JOptionPane.showMessageDialog(this, "Effettua il login per aggiungere ai preferiti.");
+            return;
         }
 
-        JButton backBtn = new JButton("← Torna alle linee");
-        backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        backBtn.addActionListener(e -> {
-            clearResults();
-            ripristinando = true;
-            if (!ultimeRotte.isEmpty()) {
-                aggiornaRisultatiRotte(ultimeRotte);
-            } else {
-                JLabel msg = new JLabel("Nessuna linea precedente trovata.", SwingConstants.CENTER);
-                msg.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-                msg.setForeground(Color.DARK_GRAY);
-                resultsContainer.add(msg);
-                resultsContainer.revalidate();
-                resultsContainer.repaint();
-            }
-            if (waypointDrawer != null) {
-                waypointDrawer.clearWaypoints();
-            }
-        });
-
-        resultsContainer.add(Box.createVerticalStrut(10));
-        resultsContainer.add(backBtn);
-
-        resultsContainer.revalidate();
-        resultsContainer.repaint();
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // METODO HELPER - Estrai ritardo dalla stringa formattata
-    // ═══════════════════════════════════════════════════════════
-    private int estraiRitardo(String orarioFormattato) {
-        try {
-            // Formato: "18:33 (+23 min)" o "18:33 (-5 min)" o "18:33 (On Time)"
-
-            if (orarioFormattato.contains("(+")) {
-                // Ritardo positivo
-                int start = orarioFormattato.indexOf("(+") + 2;
-                int end = orarioFormattato.indexOf(" min");
-                if (end > start) {
-                    String minStr = orarioFormattato.substring(start, end).trim();
-                    return Integer.parseInt(minStr);
-                }
-            } else if (orarioFormattato.contains("(-")) {
-                // Anticipo
-                int start = orarioFormattato.indexOf("(-") + 2;
-                int end = orarioFormattato.indexOf(" min");
-                if (end > start) {
-                    String minStr = orarioFormattato.substring(start, end).trim();
-                    return -Integer.parseInt(minStr);
-                }
-            } else if (orarioFormattato.contains("On Time")) {
-                // Puntuale
-                return 0;
-            }
-
-            // Se non trova nulla, assume puntuale
-            return 0;
-
-        } catch (Exception e) {
-            System.err.println("Errore estrazione ritardo da: " + orarioFormattato);
-            e.printStackTrace();
-            return 0;
+        Favorite f = new Favorite(rotta.getRouteShortName(), "LINEA");
+        if (UserManager.haPreferito(user, f)) {
+            UserManager.rimuoviPreferito(user, f);
+            JOptionPane.showMessageDialog(this, "Linea rimossa dai preferiti!");
+        } else {
+            UserManager.aggiungiPreferito(user, f);
+            JOptionPane.showMessageDialog(this, "Linea aggiunta ai preferiti!");
         }
-    }
 
-    private ServiceQualityPanel.AffollamentoBus stimaAffollamento(int ritardoMinuti, String orarioStr) {
-        try {
-            String oraPart = orarioStr.split("\\s+")[0];
-            int ora = Integer.parseInt(oraPart.split(":")[0]);
-
-            boolean oraDiPunta = (ora >= 7 && ora <= 9) || (ora >= 17 && ora <= 19);
-
-            if (oraDiPunta) {
-                if (ritardoMinuti >= 15) return ServiceQualityPanel.AffollamentoBus.MOLTO_ALTO;
-                if (ritardoMinuti >= 8)  return ServiceQualityPanel.AffollamentoBus.ALTO;
-                if (ritardoMinuti >= 3)  return ServiceQualityPanel.AffollamentoBus.MEDIO;
-                return ServiceQualityPanel.AffollamentoBus.BASSO;   // ✅ differenzia i puntuali
-            } else {
-                if (ritardoMinuti >= 15) return ServiceQualityPanel.AffollamentoBus.ALTO;
-                if (ritardoMinuti >= 8)  return ServiceQualityPanel.AffollamentoBus.MEDIO;
-                if (ritardoMinuti >= 3)  return ServiceQualityPanel.AffollamentoBus.BASSO;
-                return ServiceQualityPanel.AffollamentoBus.BASSO;
-            }
-
-        } catch (Exception e) {
-            System.err.println("ERRORE stimaAffollamento per orario: " + orarioStr);
-            e.printStackTrace();
-            return ServiceQualityPanel.AffollamentoBus.SCONOSCIUTO;
-        }
-    }
-
-    // ==================================================
-    // AGGIUNTE (serve per i test)
-    // ==================================================
-
-    JPanel getResultsContainerForTest() { // serve per i test
-        return resultsContainer; // serve per i test
-    }
-
-    JButton getCloseButtonForTest() { // serve per i test
-        return closeButton; // serve per i test
-    }
-
-    int getResultsCountForTest() { // serve per i test
-        return results.size(); // serve per i test
-    }
-
-    java.util.List<ResultItem> getResultsSnapshotForTest() { // serve per i test
-        return new ArrayList<>(results); // serve per i test
-    }
-
-    int estraiRitardoForTest(String s) { // serve per i test
-        return estraiRitardo(s); // serve per i test
+        FavoritesSupport.refreshFavoritesPanel(this, user);
     }
 }
