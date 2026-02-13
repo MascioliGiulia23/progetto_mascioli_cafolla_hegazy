@@ -7,13 +7,13 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.util.*;
 
-/**
- * Classe Database che gestisce la lettura dei file GTFS statici da resources
- * nella cartella static_gtfs/
- */
+
+ //Classe Database che gestisce la lettura dei file GTFS statici da resources
+ //nella cartella static_gtfs/
+
 public class Database {
 
-    // ==================== LETTURA GTFS STATICI - STOPS ====================
+    //  LETTURA GTFS STATICI - STOPS
 
     public static List<Fermate> leggiStopDaFile() {
         List<Fermate> fermate = new ArrayList<>();
@@ -66,7 +66,7 @@ public class Database {
                     }
                 }
 
-                System.out.println("✓ Caricate " + fermate.size() + " fermate da static_gtfs/stops.txt");
+                System.out.println("Caricate " + fermate.size() + " fermate da static_gtfs/stops.txt");
 
             }
 
@@ -77,7 +77,7 @@ public class Database {
         return fermate;
     }
 
-    // ==================== LETTURA GTFS STATICI - ROUTES ====================
+    //  LETTURA GTFS STATICI - ROUTES
 
     public static List<Route> leggiRouteDaFile() {
         List<Route> rotte = new ArrayList<>();
@@ -129,7 +129,7 @@ public class Database {
                     }
                 }
 
-                System.out.println("✓ Caricate " + rotte.size() + " rotte da static_gtfs/routes.txt");
+                System.out.println("Caricate " + rotte.size() + " rotte da static_gtfs/routes.txt");
 
             }
 
@@ -141,7 +141,7 @@ public class Database {
     }
 
 
-    // ==================== LETTURA GTFS STATICI - SHAPES ====================
+    //  LETTURA GTFS STATICI - SHAPES
 
     public static Map<String, ShapeRoute> leggiShapeDaFile() {
         Map<String, ShapeRoute> shapes = new HashMap<>();
@@ -181,7 +181,7 @@ public class Database {
                 shape.ordinaPunti();
             }
 
-            System.out.println("✓ Caricate " + shapes.size() + " forme da static_gtfs/shapes.txt");
+            System.out.println("Caricate " + shapes.size() + " forme da static_gtfs/shapes.txt");
 
         } catch (Exception e) {
             System.err.println("Errore nella lettura di static_gtfs/shapes.txt: " + e.getMessage());
@@ -191,7 +191,7 @@ public class Database {
     }
 
 
-    // ==================== LETTURA GTFS STATICI - CALENDAR ====================
+    //  LETTURA GTFS STATICI - CALENDAR
 
     public static Map<String, CalendarDate> leggiCalendarDaFile() {
         Map<String, CalendarDate> calendari = new HashMap<>();
@@ -239,7 +239,7 @@ public class Database {
             }
 
             reader.close();
-            System.out.println("✓ Caricati " + calendari.size() + " calendari da static_gtfs/calendar.txt");
+            System.out.println("Caricati " + calendari.size() + " calendari da static_gtfs/calendar.txt");
 
         } catch (Exception e) {
             System.err.println("Errore nella lettura di static_gtfs/calendar.txt: " + e.getMessage());
@@ -335,7 +335,7 @@ public class Database {
                 }
             }
 
-            System.out.println("✓ Caricati " + stopTimes.size() + " stop times da static_gtfs/stop_times.txt");
+            System.out.println("Caricati " + stopTimes.size() + " stop times da static_gtfs/stop_times.txt");
 
         } catch (Exception e) {
             System.err.println("Errore nella lettura di static_gtfs/stop_times.txt: " + e.getMessage());
@@ -395,7 +395,7 @@ public class Database {
                 }
             }
 
-            System.out.println("✓ Caricate " + trips.size() + " corse da static_gtfs/trips.txt");
+            System.out.println("Caricate " + trips.size() + " corse da static_gtfs/trips.txt");
 
         } catch (Exception e) {
             System.err.println("Errore nella lettura di static_gtfs/trips.txt: " + e.getMessage());
@@ -426,7 +426,7 @@ public class Database {
 
         for (Fermate f : fermate) {
             if (f.getStopName().toLowerCase().contains(ricerca)) {
-                System.out.println("→ Fermata trovata: " + f.getStopName() + " (type: " + f.getLocationType() + ")");
+                System.out.println("Fermata trovata: " + f.getStopName() + " (type: " + f.getLocationType() + ")");
 
                 risultati.add(f);
             }
@@ -471,33 +471,15 @@ public class Database {
             }
         }
 
-        System.out.println("→ Trovate " + risultati.size() + " linee metro/tram per ricerca \"" + nomeParziale + "\"");
+        System.out.println("Trovate " + risultati.size() + " linee metro/tram per ricerca \"" + nomeParziale + "\"");
         return risultati;
     }
 
-
-//    public static Fermate trovaFermataPiuVicino(List<Fermate> fermate, double lat, double lon) {
-//        Fermate piuVicina = null;
-//        double distanzaMin = Double.MAX_VALUE;
-//
-//        for (Fermate f : fermate) {
-//            double dLat = f.getStopLat() - lat;
-//            double dLon = f.getStopLon() - lon;
-//            double distanza = dLat * dLat + dLon * dLon;
-//            if (distanza < distanzaMin) {
-//                distanzaMin = distanza;
-//                piuVicina = f;
-//            }
-//        }
-//        return piuVicina;
-//    }
+    //  METODI HELPER
 
 
-    // ==================== METODI HELPER ====================
+     //Parsa il route type in modo robusto
 
-    /**
-     * Parsa il route type in modo robusto
-     */
     private static int parseRouteType(String value) {
         try {
             return Integer.parseInt(value.trim());
@@ -507,10 +489,10 @@ public class Database {
     }
 
 
-    /**
-     * Apre un file GTFS dalla cartella resources/static_gtfs e restituisce un BufferedReader.
-     * Usa un try-catch leggero e gestisce il percorso in modo portabile.
-     */
+
+     // Apre un file GTFS dalla cartella resources/static_gtfs e restituisce un BufferedReader.
+     //Usa un try-catch leggero e gestisce il percorso in modo portabile.
+
     private static BufferedReader apriFileGTFS(String nomeFile) throws IOException {
         InputStream inputStream = Database.class.getResourceAsStream("/static_gtfs/" + nomeFile);
         if (inputStream == null) {

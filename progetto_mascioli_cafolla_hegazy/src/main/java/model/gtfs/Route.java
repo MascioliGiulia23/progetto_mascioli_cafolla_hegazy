@@ -1,10 +1,9 @@
 package model.gtfs;
 
 
-/**
- * Classe che rappresenta una rotta/linea del trasporto pubblico (GTFS Route)
- * Legge i dati dal file routes.txt nella cartella resources
- */
+ // Classe che rappresenta una rotta/linea del trasporto pubblico (GTFS Route)
+ //Legge i dati dal file routes.txt nella cartella resources
+
 public class Route {
 
     // Attributi della rotta
@@ -18,9 +17,9 @@ public class Route {
     private String routeColor;        // Colore in esadecimale (es. "FF0000")
     private String routeTextColor;    // Colore testo in esadecimale (es. "FFFFFF")
 
-    /**
-     * Costruttore completo della rotta
-     */
+
+     // Costruttore completo della rotta
+
     public Route(String routeId, String agencyId, String routeShortName, String routeLongName,
                  String routeDesc, int routeType, String routeUrl, String routeColor, String routeTextColor) {
         this.routeId = routeId;
@@ -34,7 +33,7 @@ public class Route {
         this.routeTextColor = routeTextColor;
     }
 
-// ========== 🔹 Campi e metodi aggiuntivi per supportare la direzione e la shape ==========
+// Campi e metodi per supportare la direzione e la shape
 
     private String shapeId;
     private int directionId = -1;
@@ -71,12 +70,10 @@ public class Route {
 
     public int getRouteType() { return routeType; }
 
-    //METODI UTILI
-    /**
-     * Converte il tipo di rotta in una stringa descrittiva
-     *
-     * @return Descrizione del tipo di rotta
-     */
+
+
+     //Converte il tipo di rotta in una stringa descrittiva
+     // @return Descrizione del tipo di rotta
     public String getTipoRottaDescrizione() {
         return switch (routeType) {
             case 0 -> "Tram";
@@ -96,9 +93,9 @@ public class Route {
         };
     }
 
-    /**
-     * Ritorna una rappresentazione testuale della rotta
-     */
+
+     // Ritorna una rappresentazione testuale della rotta
+
     @Override
     public String toString() {
         return "Route{" +
@@ -110,9 +107,8 @@ public class Route {
                 '}';
     }
 
-    /**
-     * Verifica se due rotte sono uguali (basato sull'ID)
-     */
+     // Verifica se due rotte sono uguali (basato sull'ID)
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -121,9 +117,8 @@ public class Route {
         return routeId.equals(route.routeId);
     }
 
-    /**
-     * Genera un hashcode basato sull'ID della rotta
-     */
+     // Genera un hashcode basato sull'ID della rotta
+
     @Override
     public int hashCode() {
         return routeId.hashCode();

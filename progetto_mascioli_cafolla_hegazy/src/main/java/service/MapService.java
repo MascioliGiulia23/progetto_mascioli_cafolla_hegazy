@@ -111,6 +111,6 @@ public class MapService {
         // Disegna la linea e i waypoint della linea
         waypointDrawer.clearWaypoints();
         waypointDrawer.addWaypoints(waypoints);
-        System.out.println("🟢 Disegnata la linea con " + waypoints.size() + " fermate");
+        System.out.println("Disegnata la linea con " + waypoints.size() + " fermate");
     }
 }

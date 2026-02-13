@@ -17,7 +17,7 @@ public class GtfsRealtimeVehicleService {
     // Feed ufficiale Roma Mobilità per le posizioni dei veicoli
     private static final String VEHICLE_POSITIONS_URL =
             "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb";
-    // >>> NUOVA DIPENDENZA INIETTABILE (serve per i test)
+    //DIPENDENZA INIETTABILE (serve per i test)
     // Default = comportamento originale (apre URL reale). Quindi l'app NON cambia.
     private static Supplier<InputStream> feedStreamSupplier = () -> { // serve per i test
         try {
@@ -27,7 +27,7 @@ public class GtfsRealtimeVehicleService {
         }
     }; // serve per i test
 
-    // >>> TEST HOOKS (serve per i test)
+    // TEST HOOKS (serve per i test)
     static void setFeedStreamSupplierForTest(Supplier<InputStream> supplier) { // serve per i test
         feedStreamSupplier = Objects.requireNonNull(supplier);                 // serve per i test
     }
@@ -41,10 +41,10 @@ public class GtfsRealtimeVehicleService {
             }
         }; // serve per i test
     }
-    /**
-     * Recupera le posizioni in tempo reale di tutti i veicoli
-     * Restituisce una mappa: tripId -> VehicleData
-     */
+
+     // Recupera le posizioni in tempo reale di tutti i veicoli
+     // Restituisce una mappa: tripId -> VehicleData
+
     public static Map<String, VehicleData> getRealtimeVehiclePositions() {
         Map<String, VehicleData> vehicles = new HashMap<>();
 
@@ -87,9 +87,9 @@ public class GtfsRealtimeVehicleService {
         return vehicles;
     }
 
-    /**
-     * Filtra i veicoli per routeId e directionId specifici
-     */
+
+     //Filtra i veicoli per routeId e directionId specifici
+
     public static List<VehicleData> getVehiclesForRouteAndDirection(
             String routeId, int directionId) {
 
@@ -109,9 +109,9 @@ public class GtfsRealtimeVehicleService {
         return filtered;
     }
 
-    /**
-     * Classe interna per rappresentare i dati di un veicolo
-     */
+
+     //Classe interna per rappresentare i dati di un veicolo
+
     public static class VehicleData {
         private final String vehicleId;
         private final String tripId;

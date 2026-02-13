@@ -21,8 +21,8 @@ public class GtfsService {
     private List<CalendarDate> eccezioni;
     private Map<String, List<StopTime>> stopTimesPerStopId;
 
-    // ====== DIPENDENZE INIETTABILI (serve per i test) ======
-    // Default = comportamento originale basato su Database, quindi NON cambia nulla nell'app.
+    // DIPENDENZE INIETTABILI (serve per i test)
+    // Default = comportamento originale basato su Database
 
     private static Supplier<List<Fermate>> fermateLoader = Database::leggiStopDaFile; // serve per i test
     private static Supplier<List<Route>> rotteLoader = Database::leggiRouteDaFile;    // serve per i test
@@ -67,11 +67,11 @@ public class GtfsService {
         caricaDatiGTFS();
     }
 
-    /** Legge tutti i file GTFS dal Database */
+    //Legge tutti i file GTFS dal Database
     private void caricaDatiGTFS() {
         System.out.println("Caricamento dati GTFS...");
 
-        // >>> MODIFICA MINIMA: usa i loader (default = Database.* come prima)
+        //  usa i loader (default = Database.* come prima)
         fermate = fermateLoader.get();     // serve per i test
         rotte = rotteLoader.get();         // serve per i test
         forme = formeLoader.get();         // serve per i test

@@ -89,10 +89,9 @@ public class CalendarDate {
 
     // ==================== METODI UTILI ====================
 
-    /**
-     * Verifica se il servizio è operativo in una data specifica
-     * Tiene conto sia del calendario ricorrente che delle eccezioni
-     */
+
+     // Verifica se il servizio è operativo in una data specifica
+     //Tiene conto sia del calendario ricorrente che delle eccezioni
     public boolean isOperativoInData(LocalDate dataVerifica, List<CalendarDate> eccezioni) {
         // Verifica le eccezioni prima
         for (CalendarDate exc : eccezioni) {
@@ -164,16 +163,15 @@ public class CalendarDate {
         }
     }
 
-    /**
-     * Ritorna il tipo di eccezione come stringa
-     */
+
+    //Ritorna il tipo di eccezione come stringa
     public String getExceptionTypeDescrizione() {
         return exceptionType == 1 ? "Servizio disponibile" : "Servizio non disponibile";
     }
 
-    /**
-     * Converte una stringa di data in formato YYYYMMDD a LocalDate
-     */
+
+     //Converte una stringa di data in formato YYYYMMDD a LocalDate
+
     public static LocalDate parseDataGTFS(String dataStr) {
         if (dataStr == null || dataStr.length() != 8) {
             return null;

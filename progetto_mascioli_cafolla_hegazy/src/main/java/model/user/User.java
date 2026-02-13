@@ -27,16 +27,16 @@ public class User implements Serializable {
         return this.password.equals(password);
     }
 
-    /**
-     * Aggiunge un preferito
-     */
+
+    // Aggiunge un preferito
+
     public boolean aggiungiPreferito(Favorite favorite) {
         if (!preferiti.contains(favorite)) {
             preferiti.add(favorite);
-            System.out.println("✓ Aggiunto preferito: " + favorite.getNome());
+            System.out.println("Aggiunto preferito: " + favorite.getNome());
             return true;
         }
-        System.out.println("⚠ Preferito già esistente: " + favorite.getNome());
+        System.out.println("Preferito già esistente: " + favorite.getNome());
         return false;
     }
 
@@ -45,22 +45,19 @@ public class User implements Serializable {
 
     public boolean rimuoviPreferito(Favorite favorite) {
         if (preferiti.remove(favorite)) {
-            System.out.println("✓ Rimosso preferito: " + favorite.getNome());
+            System.out.println("Rimosso preferito: " + favorite.getNome());
             return true;
         }
         return false;
     }
 
-    /**
-     * Verifica se un preferito è già salvato
-     */
+     //Verifica se un preferito è già salvato
     public boolean haPreferito(Favorite favorite) {
         return preferiti.contains(favorite);
     }
 
-    /**
-     * Ritorna la lista dei preferiti
-     */
+
+     // Ritorna la lista dei preferiti
     public List<Favorite> getPreferiti() {
         return new ArrayList<>(preferiti);
     }

@@ -92,12 +92,11 @@ public class Fermate {
         return RAGGIO_TERRA_KM * c;
     }
 
-    /**
-     * Calcola la distanza in metri tra questa fermata e un'altra
-     *
-     * @param altroStop La fermata con cui calcolare la distanza
-     * @return Distanza in metri
-     */
+
+     // Calcola la distanza in metri tra questa fermata e un'altra
+     //@param altroStop La fermata con cui calcolare la distanza
+     // @return Distanza in metri
+
     public double calcolaDistanzaMetri(Fermate altroStop) {
         return calcolaDistanza(altroStop) * 1000;
     }

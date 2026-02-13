@@ -179,7 +179,7 @@ public class MapController {
 
         currentSelectedTrip = trip;
 
-        System.out.println("✓ Direzione disegnata: " + trip.getTripId());
+        System.out.println("Direzione disegnata: " + trip.getTripId());
         mapViewer.setZoom(6);
         GeoPosition center = mapViewer.getAddressLocation();
         mapViewer.setAddressLocation(new GeoPosition(center.getLatitude() - 0.01, center.getLongitude() - 0.025));
@@ -189,9 +189,9 @@ public class MapController {
 
     }
 
-    /**
-     * Avvia il timer per aggiornare le posizioni dei bus ogni 30 secondi
-     */
+
+     // Avvia il timer per aggiornare le posizioni dei bus ogni 30 secondi
+
     private void avviaAggiornamentoRealtimeBus(Route rotta, Trip trip) {
         // Ferma il timer precedente se esiste
         fermaAggiornamentoRealtimeBus();
@@ -247,7 +247,7 @@ public class MapController {
 
         waypointDrawer.addWaypoints(busWaypoints);
 
-        System.out.println("[Real-time] ✓ " + busWaypoints.size() + " bus aggiornati sulla mappa");
+        System.out.println("[Real-time] " + busWaypoints.size() + " bus aggiornati sulla mappa");
     }
 
     //Ferma l'aggiornamento real-time dei bus

@@ -12,39 +12,36 @@ import java.util.function.BooleanSupplier; // serve per i test
 import java.util.function.Consumer;        // serve per i test
 
 
-/**
- * Classe di servizio che gestisce lo stato della connessione Internet.
- * Permette di sapere in ogni momento se l'utente è online o offline.
- * Il controllo della connessione sarà eseguito periodicamente (ogni 30 secondi)
- * dal MapInitializer o dal MapService.
- */
+
+ //Classe di servizio che gestisce lo stato della connessione Internet.
+ //Permette di sapere in ogni momento se l'utente è online o offline.
+ //Il controllo della connessione sarà eseguito periodicamente (ogni 30 secondi)
+ // dal MapInitializer o dal MapService.
 public class ConnectivityService {
 
     // Stato corrente della connessione (true = online, false = offline)
     private static boolean online = false;
-    // >>> NUOVE DIPENDENZE INIETTABILI (serve per i test)
-    // Di default puntano al comportamento reale, quindi NON cambia nulla nell'app.
+    //DIPENDENZE INIETTABILI (serve per i test)
+    // Di default puntano al comportamento reale,
     private static BooleanSupplier probe = ConnectivityService::testConnection; // serve per i test
     private static Consumer<Boolean> notifier = ConnectivityService::showConnectionToast; // serve per i test
 
-    /**
-     * Restituisce l'ultimo stato noto della connessione.
-     * @return true se online, false se offline
-     */
+
+     //Restituisce l'ultimo stato noto della connessione.
+     //@return true se online, false se offline
     public static boolean isOnline() {
         return online;
     }
 
-    /**
-     * Effettua un controllo della connessione e aggiorna lo stato interno.
-     * Se lo stato cambia (da online a offline o viceversa), stampa un messaggio nel log.
-     */
+     // Effettua un controllo della connessione e aggiorna lo stato interno.
+     //Se lo stato cambia (da online a offline o viceversa), stampa un messaggio nel log.
+
     public static void checkConnection() {
         boolean previousState = online;
         //online = testConnection();
 
 
-        // >>> MODIFICA MINIMA: usa probe (che di default chiama testConnection)
+        // usa probe (che di default chiama testConnection)
         // Comportamento identico a prima.
         online = probe.getAsBoolean(); // serve per i test
 
@@ -52,11 +49,11 @@ public class ConnectivityService {
             System.out.println("[ConnectivityService] Stato cambiato: " +
                     (online ? "ONLINE" : "OFFLINE"));
            // showConnectionToast(online);
-            // >>> MODIFICA MINIMA: usa notifier (che di default chiama showConnectionToast)
+            // usa notifier (che di default chiama showConnectionToast)
             notifier.accept(online); // serve per i test
         }
     }
-    // ===== TEST HOOKS (solo per test) =====
+    //  TEST HOOKS (solo per test)
 
     static void setProbeForTest(BooleanSupplier newProbe) { // serve per i test
         probe = Objects.requireNonNull(newProbe);          // serve per i test
@@ -72,11 +69,11 @@ public class ConnectivityService {
         notifier = ConnectivityService::showConnectionToast; // serve per i test
     }
 
-    /**
-     * Tenta di stabilire una connessione a Internet.
-     * In questo esempio prova a collegarsi a "www.google.com" sulla porta 80.
-     * @return true se la connessione riesce, false altrimenti
-     */
+
+     // Tenta di stabilire una connessione a Internet.
+     //In questo esempio prova a collegarsi a "www.google.com" sulla porta 80.
+     // @return true se la connessione riesce, false altrimenti
+
     private static boolean testConnection() {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress("www.google.com", 80), 2000);

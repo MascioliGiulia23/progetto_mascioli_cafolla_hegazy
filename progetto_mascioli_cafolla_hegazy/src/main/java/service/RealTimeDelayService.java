@@ -11,16 +11,16 @@ import java.util.function.Function;   // serve per i test
 import java.util.function.LongSupplier; // serve per i test
 import java.util.function.Supplier;   // serve per i test
 
-/**
- * Servizio per ottenere i ritardi real-time con cache intelligente e fallback
- * + Monitoraggio automatico qualità del servizio
- */
+
+ //Servizio per ottenere i ritardi real-time con cache intelligente e fallback
+ // + Monitoraggio automatico qualità del servizio
+
 public class RealTimeDelayService {
 
     private final RealTimeFetcher fetcher;
     private final RealTimeParser parser;
 
-    // >>> DIPENDENZE INIETTABILI (serve per i test)
+    //DIPENDENZE INIETTABILI (serve per i test)
     // Default = comportamento originale, quindi l'app NON cambia.
     private Supplier<byte[]> tripFeedFetcher;                 // serve per i test
     private Function<byte[], FeedMessage> tripFeedParser;     // serve per i test
@@ -39,9 +39,9 @@ public class RealTimeDelayService {
     // CACHE DEI DELAY PER TRIP (fallback)
     private final Map<String, Integer> delayByTrip = new HashMap<>();
 
-    /**
-     * Costruttore: inizializza con i dati GTFS statici
-     */
+
+     //Costruttore: inizializza con i dati GTFS statici
+
     public RealTimeDelayService(List<Trip> trips,
                                 List<Route> routes,
                                 List<StopTime> stopTimes) {
@@ -52,7 +52,7 @@ public class RealTimeDelayService {
 
         this.fetcher = new RealTimeFetcher(tripUrl, vehicleUrl);
         this.parser = new RealTimeParser();
-        // >>> DEFAULT per runtime (serve per i test)
+        //DEFAULT per runtime (serve per i test)
         this.tripFeedFetcher = () -> { // serve per i test
             try {
                 return fetcher.fetchTripFeed();
@@ -71,24 +71,24 @@ public class RealTimeDelayService {
 
         this.clockMillis = System::currentTimeMillis; // serve per i test
 
-        // ⭐ CREA MAPPE PER LOOKUP VELOCE
+        // CREA MAPPE PER LOOKUP VELOCE
         this.tripsById = trips.stream()
                 .collect(Collectors.toMap(Trip::getTripId, t -> t, (a, b) -> a));
 
         this.routesById = routes.stream()
                 .collect(Collectors.toMap(Route::getRouteId, r -> r, (a, b) -> a));
 
-        // ⭐ COPPIE VALIDE (trip_id#stop_id) dallo statico
+        // COPPIE VALIDE (trip_id#stop_id) dallo statico
         this.validTripStopPairs = stopTimes.stream()
                 .map(st -> st.getTripId() + "#" + st.getStopId())
                 .collect(Collectors.toSet());
 
-        System.out.println("[RealTimeDelayService] ✓ Inizializzato");
-        System.out.println("[RealTimeDelayService]   → " + tripsById.size() + " trip");
-        System.out.println("[RealTimeDelayService]   → " + validTripStopPairs.size() + " coppie trip/stop valide");
+        System.out.println("[RealTimeDelayService]  Inizializzato");
+        System.out.println("[RealTimeDelayService]   " + tripsById.size() + " trip");
+        System.out.println("[RealTimeDelayService]   " + validTripStopPairs.size() + " coppie trip/stop valide");
     }
 
-    // >>> COSTRUTTORE PER TEST (serve per i test)
+    //COSTRUTTORE PER TEST (serve per i test)
     // Non rompe nulla perché aggiunge solo un overload; l'app continua a usare il costruttore sopra.
     RealTimeDelayService(List<Trip> trips,
                          List<Route> routes,
@@ -119,10 +119,10 @@ public class RealTimeDelayService {
     }
 
 
-    /**
-     * ⭐ METODO PRINCIPALE: Ottiene delay per fermata
-     * Restituisce: routeShortName → List<Integer> (delay in secondi)
-     */
+
+     //METODO PRINCIPALE: Ottiene delay per fermata
+     // Restituisce: routeShortName → List<Integer> (delay in secondi)
+
     public Map<String, List<Integer>> getAllDelaysForStop(String stopId) {
         Map<String, List<Integer>> delays = new HashMap<>();
 
@@ -130,7 +130,7 @@ public class RealTimeDelayService {
         try {
             tripData = getTripDataCached();
         } catch (Exception e) {
-            System.err.println("[RealTimeDelayService] ✗ Errore fetch: " + e.getMessage());
+            System.err.println("[RealTimeDelayService] Errore fetch: " + e.getMessage());
             return delays;
         }
 
@@ -139,7 +139,7 @@ public class RealTimeDelayService {
 
             System.out.println("[RealTimeDelayService] Feed entities: " + feed.getEntityCount());
 
-            // ⭐ PASSO 1: Raccogli delay aggregati per trip (fallback)
+            // Raccogli delay aggregati per trip (fallback)
             delayByTrip.clear();
             for (FeedEntity entity : feed.getEntityList()) {
                 if (!entity.hasTripUpdate()) continue;
@@ -167,7 +167,7 @@ public class RealTimeDelayService {
 
             System.out.println("[RealTimeDelayService] Delay raccolti per " + delayByTrip.size() + " trip");
 
-            // ⭐ PASSO 2: Cerca delay specifici per la fermata
+            //  Cerca delay specifici per la fermata
             for (FeedEntity entity : feed.getEntityList()) {
                 if (!entity.hasTripUpdate()) continue;
 
@@ -185,7 +185,7 @@ public class RealTimeDelayService {
                 String routeShortName = route.getRouteShortName();
                 boolean foundExactStop = false;
 
-                // ⭐ CERCA DELAY ESATTO PER QUESTA FERMATA
+                // CERCA DELAY ESATTO PER QUESTA FERMATA
                 for (TripUpdate.StopTimeUpdate stu : tripUpdate.getStopTimeUpdateList()) {
                     if (!stu.hasStopId() || !stopId.equals(stu.getStopId())) continue;
 
@@ -201,27 +201,27 @@ public class RealTimeDelayService {
 
                     foundExactStop = true;
 
-                    System.out.printf("[RealTimeDelayService] ✓ Match esatto: stop=%s trip=%s route=%s delay=%ds%n",
+                    System.out.printf("[RealTimeDelayService]Match esatto: stop=%s trip=%s route=%s delay=%ds%n",
                             stopId, tripId, routeShortName, delaySeconds);
                 }
 
-                // ⭐ FALLBACK: Se non trova delay specifico, usa delay del trip
+                // FALLBACK: Se non trova delay specifico, usa delay del trip
                 if (!foundExactStop && delayByTrip.containsKey(tripId)) {
-                    // ⭐ VERIFICA CHE LA COPPIA TRIP/STOP SIA VALIDA
+                    // VERIFICA CHE LA COPPIA TRIP/STOP SIA VALIDA
                     String pairKey = tripId + "#" + stopId;
                     if (validTripStopPairs.contains(pairKey)) {
                         int delaySeconds = delayByTrip.get(tripId);
                         delays.computeIfAbsent(routeShortName, k -> new ArrayList<>())
                                 .add(delaySeconds);
 
-                        System.out.printf("[RealTimeDelayService] ⚠ Fallback: stop=%s trip=%s route=%s delay=%ds%n",
+                        System.out.printf("[RealTimeDelayService] Fallback: stop=%s trip=%s route=%s delay=%ds%n",
                                 stopId, tripId, routeShortName, delaySeconds);
                     }
                 }
             }
 
         } catch (RuntimeException e) {
-            System.err.println("[RealTimeDelayService] ✗ Errore parse: " + e.getMessage());
+            System.err.println("[RealTimeDelayService] Errore parse: " + e.getMessage());
         }
 
 
@@ -229,11 +229,11 @@ public class RealTimeDelayService {
         return delays;
     }
 
-    /**
-     * ⭐ METODO CON MONITORAGGIO QUALITÀ: Ottiene delay per route+orario+stop
-     * Restituisce: "linea#orario" → delay in secondi
-     * + Registra automaticamente nel monitor qualità
-     */
+
+     // METODO CON MONITORAGGIO QUALITÀ: Ottiene delay per route+orario+stop
+     // Restituisce: "linea#orario" → delay in secondi
+     //+ Registra automaticamente nel monitor qualità
+
     public Map<String, Integer> getDelaysByTripId(String stopId) {
         Map<String, Integer> delaysByLineaOrario = new HashMap<>();
 
@@ -244,7 +244,7 @@ public class RealTimeDelayService {
         try {
             tripData = getTripDataCached();
         } catch (Exception e) {
-            System.err.println("[RealTimeDelayService] ✗ Errore fetch: " + e.getMessage());
+            System.err.println("[RealTimeDelayService] Errore fetch: " + e.getMessage());
             return delaysByLineaOrario;
         }
 
@@ -252,27 +252,27 @@ public class RealTimeDelayService {
             FeedMessage feed = tripFeedParser.apply(tripData);
 
             System.out.println("[RealTimeDelayService] Feed entities: " + feed.getEntityCount());
-            System.out.println("[RealTimeDelayService] === MATCHING PER STOP " + stopId + " ===");
+            System.out.println("[RealTimeDelayService] MATCHING PER STOP " + stopId + " ===");
 
             for (FeedEntity entity : feed.getEntityList()) {
                 if (!entity.hasTripUpdate()) continue;
 
                 TripUpdate tripUpdate = entity.getTripUpdate();
 
-                // ⭐ Ottieni route_id dal feed RT
+                // Ottieni route_id dal feed RT
                 String routeIdRT = tripUpdate.getTrip().hasRouteId() ?
                         tripUpdate.getTrip().getRouteId() : null;
 
                 if (routeIdRT == null) continue;
 
-                // ⭐ Converti route_id in route_short_name (numero linea)
+                //Converti route_id in route_short_name (numero linea)
                 Route route = routesById.get(routeIdRT);
                 if (route == null) continue;
 
                 String nomeLinea = route.getRouteShortName();
                 if (nomeLinea == null) continue;
 
-                // ⭐ CERCA DELAY PER QUESTA FERMATA
+                //CERCA DELAY PER QUESTA FERMATA
                 for (TripUpdate.StopTimeUpdate stu : tripUpdate.getStopTimeUpdateList()) {
                     if (!stu.hasStopId() || !stopId.equals(stu.getStopId())) continue;
 
@@ -296,7 +296,7 @@ public class RealTimeDelayService {
                     }
 
                     if (scheduledTime > 0) {
-                        // ⭐ CALCOLA ORARIO PROGRAMMATO (RT fornisce orario effettivo!)
+                        //CALCOLA ORARIO PROGRAMMATO (RT fornisce orario effettivo!)
                         long scheduledTimeCorretto = scheduledTime - delaySeconds;
                         java.time.LocalTime orarioProgrammato = java.time.Instant
                                 .ofEpochSecond(scheduledTimeCorretto)
@@ -306,12 +306,12 @@ public class RealTimeDelayService {
                         String orarioProgrammatoStr = orarioProgrammato.format(
                                 java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
 
-                        // ⭐ USA ORARIO PROGRAMMATO PER MATCHING
+                        //USA ORARIO PROGRAMMATO PER MATCHING
                         String chiave = nomeLinea + "#" + orarioProgrammatoStr;
 
                         delaysByLineaOrario.put(chiave, delaySeconds);
 
-                        System.out.printf("[RealTimeDelayService] ✓ Linea %s @ stop %s, orario programmato %s: %d sec%n",
+                        System.out.printf("[RealTimeDelayService] Linea %s @ stop %s, orario programmato %s: %d sec%n",
                                 nomeLinea, stopId, orarioProgrammatoStr, delaySeconds);
 
 
@@ -322,7 +322,7 @@ public class RealTimeDelayService {
             }
 
         } catch (Exception e) {
-            System.err.println("[RealTimeDelayService] ✗ Errore parse: " + e.getMessage());
+            System.err.println("[RealTimeDelayService] Errore parse: " + e.getMessage());
         }
 
 
@@ -332,15 +332,15 @@ public class RealTimeDelayService {
         return delaysByLineaOrario;
     }
 
-    /**
-     * ⭐ CACHE: Riusa i dati per 30 secondi
-     */
+
+     //CACHE: Riusa i dati per 30 secondi
+
     private byte[] getTripDataCached() throws IOException, InterruptedException {
-        long now = clockMillis.getAsLong(); // ✅ clock iniettabile
+        long now = clockMillis.getAsLong(); // clock iniettabile
 
         if (lastTripData == null || now - lastFetchEpochMillis > CACHE_MS) {
             try {
-                lastTripData = tripFeedFetcher.get(); // ✅ fetch iniettabile
+                lastTripData = tripFeedFetcher.get(); // fetch iniettabile
             } catch (RuntimeException e) {
                 Throwable cause = e.getCause();
                 if (cause instanceof IOException) throw (IOException) cause;
@@ -349,9 +349,9 @@ public class RealTimeDelayService {
             }
 
             lastFetchEpochMillis = now;
-            System.out.println("[RealTimeDelayService] >>> FETCH NUOVO");
+            System.out.println("[RealTimeDelayService] FETCH NUOVO");
         } else {
-            System.out.println("[RealTimeDelayService] >>> CACHE RIUTILIZZATA");
+            System.out.println("[RealTimeDelayService] CACHE RIUTILIZZATA");
         }
 
         return lastTripData;

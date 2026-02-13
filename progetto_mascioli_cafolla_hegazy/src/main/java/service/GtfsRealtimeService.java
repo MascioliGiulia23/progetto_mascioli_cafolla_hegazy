@@ -71,11 +71,4 @@ public class GtfsRealtimeService {
         return positions;
     }
 
-//    // Test rapido standalone
-//    public static void main(String[] args) {
-//        List<GeoPosition> buses = getBusPositions();
-//        for (GeoPosition p : buses) {
-//            System.out.printf(" Bus → %.5f, %.5f%n", p.getLatitude(), p.getLongitude());
-//        }
-//    }
 }

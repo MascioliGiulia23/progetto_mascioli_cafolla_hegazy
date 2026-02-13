@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Classe che gestisce il salvataggio e caricamento degli utenti da file
- */
+
+ //Classe che gestisce il salvataggio e caricamento degli utenti da file
+
 public class UserManager {
 
     // Percorso dove salvare gli utenti
@@ -21,19 +21,18 @@ public class UserManager {
     private static Map<String, User> utenti = new HashMap<>();
     private static boolean caricati = false;
 
-    /**
-     * Carica tutti gli utenti dal file
-     */
+
+     //Carica tutti gli utenti dal file
     public static void caricaUtenti() {
         if (caricati) {
-            System.out.println("✓ Utenti già caricati (" + utenti.size() + " account)");
+            System.out.println("Utenti già caricati (" + utenti.size() + " account)");
             return;
         }
 
         File file = new File(USERS_FILE);
 
         if (!file.exists()) {
-            System.out.println("✓ File utenti non trovato, creazione nuova.");
+            System.out.println("File utenti non trovato, creazione nuova.");
             caricati = true;
             return;
         }
@@ -42,7 +41,7 @@ public class UserManager {
             @SuppressWarnings("unchecked")
             Map<String, User> utentiCaricati = (Map<String, User>) ois.readObject();
             utenti = utentiCaricati;
-            System.out.println("✓ Caricati " + utenti.size() + " utenti da file:");
+            System.out.println("Caricati " + utenti.size() + " utenti da file:");
             for (String username : utenti.keySet()) {
                 System.out.println("   - " + username);
             }
@@ -64,9 +63,9 @@ public class UserManager {
         }
     }
 
-    /**
-     * Salva tutti gli utenti su file
-     */
+
+     // Salva tutti gli utenti su file
+
     public static void salvaUtenti() {
         try {
             // Crea la cartella se non esiste
@@ -75,7 +74,7 @@ public class UserManager {
 
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(USERS_FILE))) {
                 oos.writeObject(utenti);
-                System.out.println("✓ Utenti salvati con successo (" + utenti.size() + " account)");
+                System.out.println("Utenti salvati con successo (" + utenti.size() + " account)");
             }
         } catch (Exception e) {
             System.err.println(" Errore nel salvataggio degli utenti: " + e.getMessage());
@@ -83,9 +82,9 @@ public class UserManager {
         }
     }
 
-    /**
-     * Registra un nuovo utente
-     */
+
+     // Registra un nuovo utente
+
     public static boolean registraUtente(String username, String password) {
         if (username == null || username.trim().isEmpty()) {
             System.out.println(" Username vuoto");
@@ -105,13 +104,13 @@ public class UserManager {
         User nuovoUtente = new User(username, password);
         utenti.put(username, nuovoUtente);
         salvaUtenti();
-        System.out.println("✓ Utente registrato: " + username);
+        System.out.println("Utente registrato: " + username);
         return true;
     }
 
-    /**
-     * Effettua il login di un utente
-     */
+
+     // Effettua il login di un utente
+
     public static boolean login(String username, String password) {
         System.out.println(" Tentativo login: " + username);
         System.out.println(" Utenti disponibili: " + utenti.size());
@@ -125,7 +124,7 @@ public class UserManager {
         boolean passwordCorretta = utente.verificaPassword(password);
 
         if (passwordCorretta) {
-            System.out.println("✓ Login riuscito per: " + username);
+            System.out.println("Login riuscito per: " + username);
         } else {
             System.out.println("Password errata per: " + username);
         }
@@ -168,7 +167,7 @@ public class UserManager {
 
         if (aggiunto) {
             salvaUtenti();
-            System.out.println("✓ Preferito aggiunto a " + username + ": " + favorite.getNome());
+            System.out.println("Preferito aggiunto a " + username + ": " + favorite.getNome());
         }
 
         return aggiunto;
@@ -187,7 +186,7 @@ public class UserManager {
 
         if (rimosso) {
             salvaUtenti();
-            System.out.println("✓ Preferito rimosso da " + username + ": " + favorite.getNome());
+            System.out.println("Preferito rimosso da " + username + ": " + favorite.getNome());
         }
 
         return rimosso;
@@ -198,19 +197,18 @@ public class UserManager {
 
     public static List<Favorite> ottieniPreferiti(String username) {
         if (!utenti.containsKey(username)) {
-            System.out.println(" Utente non trovato, nessun preferito: " + username);
+            System.out.println("Utente non trovato, nessun preferito: " + username);
             return new ArrayList<>();
         }
 
         User utente = utenti.get(username);
         List<Favorite> preferiti = utente.getPreferiti();
-        System.out.println("✓ Recuperati " + preferiti.size() + " preferiti per " + username);
+        System.out.println("Recuperati " + preferiti.size() + " preferiti per " + username);
         return preferiti;
     }
 
-    /**
-     * Verifica se un preferito è già salvato per l'utente
-     */
+
+     // Verifica se un preferito è già salvato per l'utente
     public static boolean haPreferito(String username, Favorite favorite) {
         if (!utenti.containsKey(username)) {
             return false;
@@ -220,9 +218,9 @@ public class UserManager {
         return utente.haPreferito(favorite);
     }
 
-    /**
-     * Ritorna il numero di preferiti di un utente
-     */
+
+     //Ritorna il numero di preferiti di un utente
+
     public static int getNumeroPreferiti(String username) {
         if (!utenti.containsKey(username)) {
             return 0;
@@ -231,10 +229,6 @@ public class UserManager {
         return utenti.get(username).getPreferiti().size();
     }
 
-    // ==================== METODI DEBUG ====================
-
-
-     //Stampa il percorso del file e lo stato
 
 
 }
