@@ -16,7 +16,7 @@ public class ServiceQualityPanel extends JPanel {
 
     private String currentContext = "IDLE";
     private Object contextData;
-    private String currentTheme = "Blu"; // ⭐ TEMA
+    private String currentTheme = "Blu"; // TEMA
 
     public ServiceQualityPanel(RealTimeDelayService delayService) {
         this.delayService = delayService;
@@ -81,12 +81,12 @@ public class ServiceQualityPanel extends JPanel {
         mostraMessaggioIniziale();
     }
 
-    // ⭐ Aggiorna per fermata (design compatto)
+    // Aggiorna per fermata (design compatto)
     public void aggiornaPerFermata(Fermate fermata, java.util.List<BusArrivo> prossimiBus) {
         aggiornaPerFermata(fermata, prossimiBus, new ArrayList<>());
     }
 
-    // ⭐ Aggiorna per fermata (con statistiche)
+    //Aggiorna per fermata (con statistiche)
     public void aggiornaPerFermata(Fermate fermata, java.util.List<BusArrivo> prossimiBus,
                                    List<BusArrivo> corseSoppresse) {
         this.currentContext = "FERMATA";
@@ -95,7 +95,7 @@ public class ServiceQualityPanel extends JPanel {
         titolo.setText(fermata.getStopName());
         contentPanel.removeAll();
 
-        // ⭐ CONTROLLO CONNESSIONE
+        // CONTROLLO CONNESSIONE
         if (!isOnline()) {
             mostraMessaggioOffline();
             return;
@@ -106,19 +106,19 @@ public class ServiceQualityPanel extends JPanel {
             return;
         }
 
-        // 1️⃣ CORSE SOPPRESSE (se presenti)
+        // CORSE SOPPRESSE (se presenti)
         if (corseSoppresse != null && !corseSoppresse.isEmpty()) {
             contentPanel.add(creaSezioneCorseSoppresse(corseSoppresse));
             contentPanel.add(Box.createVerticalStrut(10));
         }
 
-        // 2️⃣ STATISTICHE FERMATA
+        // STATISTICHE FERMATA
         if (!prossimiBus.isEmpty()) {
             contentPanel.add(creaStatisticheFermata(prossimiBus));
             contentPanel.add(Box.createVerticalStrut(12));
         }
 
-        // 3️⃣ PROSSIMI ARRIVI
+        // PROSSIMI ARRIVI
         if (!prossimiBus.isEmpty()) {
             JLabel sezioneTitolo = new JLabel("Prossimi Arrivi");
             sezioneTitolo.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -143,7 +143,7 @@ public class ServiceQualityPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // ⭐ Aggiorna per linea (con statistiche linea)
+    // Aggiorna per linea (con statistiche linea)
     public void aggiornaPerLinea(Route linea, Map<String, Integer> delaysRT,
                                  StatisticheLinea statistiche) {
         this.currentContext = "LINEA";
@@ -152,7 +152,7 @@ public class ServiceQualityPanel extends JPanel {
         titolo.setText("Linea " + linea.getRouteShortName());
         contentPanel.removeAll();
 
-        // ⭐ CONTROLLO CONNESSIONE
+        // CONTROLLO CONNESSIONE
         if (!isOnline()) {
             mostraMessaggioOffline();
             return;
@@ -163,13 +163,13 @@ public class ServiceQualityPanel extends JPanel {
             return;
         }
 
-        // 1️⃣ STATISTICHE LINEA
+        // STATISTICHE LINEA
         if (statistiche != null) {
             contentPanel.add(creaStatisticheLineaPanel(statistiche));
             contentPanel.add(Box.createVerticalStrut(12));
         }
 
-        // 2️⃣ STATUS GENERALE
+        // STATUS GENERALE
         int ritardoMedio = calcolaRitardoMedio(delaysRT);
         int percentualeProblemi = calcolaPercentualeProblemi(delaysRT);
         contentPanel.add(creaStatusCompatto(ritardoMedio, percentualeProblemi, delaysRT.size()));
@@ -178,9 +178,7 @@ public class ServiceQualityPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // ═══════════════════════════════════════════════════════════
     // MESSAGGI
-    // ═══════════════════════════════════════════════════════════
 
     private void mostraMessaggioIniziale() {
         contentPanel.removeAll();
@@ -242,9 +240,7 @@ public class ServiceQualityPanel extends JPanel {
         contentPanel.repaint();
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 1️⃣ CORSE SOPPRESSE
-    // ═══════════════════════════════════════════════════════════
+    // CORSE SOPPRESSE
 
     private JPanel creaSezioneCorseSoppresse(List<BusArrivo> corseSoppresse) {
         JPanel panel = new JPanel();
@@ -277,9 +273,7 @@ public class ServiceQualityPanel extends JPanel {
         return panel;
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 2️⃣ STATISTICHE FERMATA
-    // ═══════════════════════════════════════════════════════════
+    // STATISTICHE FERMATA
 
     private JPanel creaStatisticheFermata(List<BusArrivo> buses) {
         JPanel panel = new JPanel();
@@ -328,9 +322,8 @@ public class ServiceQualityPanel extends JPanel {
         return panel;
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 3️⃣ STATISTICHE LINEA
-    // ═══════════════════════════════════════════════════════════
+
+    //STATISTICHE LINEA
 
     private JPanel creaStatisticheLineaPanel(StatisticheLinea stats) {
         JPanel panel = new JPanel();
@@ -371,9 +364,7 @@ public class ServiceQualityPanel extends JPanel {
         return panel;
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 4️⃣ BUS COMPATTO (CON AFFOLLAMENTO)
-    // ═══════════════════════════════════════════════════════════
+    // BUS COMPATTO (CON AFFOLLAMENTO)
 
     private JPanel creaBusCompatto(BusArrivo bus) {
         JPanel card = new JPanel();
@@ -425,7 +416,7 @@ public class ServiceQualityPanel extends JPanel {
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
         statusRow.add(statusLabel);
 
-        // ⭐ AFFOLLAMENTO
+        // AFFOLLAMENTO
         if (bus.affollamento != AffollamentoBus.SCONOSCIUTO) {
             JLabel separatore = new JLabel(" | ");
             separatore.setFont(new Font("Segoe UI", Font.PLAIN, 10));
@@ -558,9 +549,7 @@ public class ServiceQualityPanel extends JPanel {
         return panel;
     }
 
-    // ═══════════════════════════════════════════════════════════
     // UTILITY
-    // ═══════════════════════════════════════════════════════════
 
     private Color getColorByDelay(int minuti) {
         if (minuti > 5) return new Color(220, 50, 50);
@@ -590,9 +579,7 @@ public class ServiceQualityPanel extends JPanel {
         return (int) ((problemi * 100.0) / delays.size());
     }
 
-    // ═══════════════════════════════════════════════════════════
     // TEMA & GRAFICA
-    // ═══════════════════════════════════════════════════════════
 
     public void updateTheme(String theme) {
         this.currentTheme = theme;
@@ -608,7 +595,7 @@ public class ServiceQualityPanel extends JPanel {
         g2d.setColor(new Color(0, 0, 0, 20));
         g2d.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 20, 20);
 
-        // ⭐ Sfondo colorato basato sul tema (IDENTICO AGLI ALTRI PANNELLI)
+        //Sfondo colorato basato sul tema (IDENTICO AGLI ALTRI PANNELLI)
         Color themeColor = SettingsPanel.getThemeColor(currentTheme);
         Color lightColor = new Color(
                 Math.min(themeColor.getRed() + 150, 255),
@@ -628,9 +615,7 @@ public class ServiceQualityPanel extends JPanel {
         this.onCloseListener = listener;
     }
 
-    // ═══════════════════════════════════════════════════════════
     // CLASSI HELPER
-    // ═══════════════════════════════════════════════════════════
 
     public static class BusArrivo {
         public String nomeLinea;
@@ -681,9 +666,7 @@ public class ServiceQualityPanel extends JPanel {
         }
     }
 
-    // ============================================================
     // serve per i test (NON cambia la logica: default = ConnectivityService)
-    // ============================================================
 
     protected boolean isOnline() {
         return service.ConnectivityService.isOnline();

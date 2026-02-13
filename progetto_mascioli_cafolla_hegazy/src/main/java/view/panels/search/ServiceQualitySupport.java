@@ -7,22 +7,17 @@ import javax.swing.SwingUtilities;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Support class per aggiornare il ServiceQualityPanel in modo riusabile,
- * togliendo logica e loop da SearchResultsPanel.
- */
+ // Support class per aggiornare il ServiceQualityPanel in modo riusabile,
+ //togliendo logica e loop da SearchResultsPanel.
 public class ServiceQualitySupport {
 
-    /**
-     * Costruisce la lista BusArrivo e aggiorna il qualityPanel sulla EDT.
-     *
-     * @param qualityPanel pannello qualità (può essere null)
-     * @param fermata fermata corrente
-     * @param colonne colonne della tabella che hai mostrato (serve per capire se è contesto LINEA o RICERCA)
-     * @param data dati della tabella che hai mostrato
-     * @param rottaCorrente può essere null (se contesto RICERCA)
-     * @param direzioneCorrente può essere null (se contesto RICERCA)
-     */
+    //Costruisce la lista BusArrivo e aggiorna il qualityPanel sulla EDT.
+     //@param qualityPanel pannello qualità (può essere null)
+     //@param fermata fermata corrente
+     //@param colonne colonne della tabella che hai mostrato (serve per capire se è contesto LINEA o RICERCA)
+    //@param data dati della tabella che hai mostrato
+    //@param rottaCorrente può essere null (se contesto RICERCA)
+    //@param direzioneCorrente può essere null (se contesto RICERCA)
     public void updateQualityPanel(ServiceQualityPanel qualityPanel,
                                    Fermate fermata,
                                    String[] colonne,
@@ -73,9 +68,7 @@ public class ServiceQualitySupport {
         });
     }
 
-    // ==========================
     // Helpers identici ai tuoi
-    // ==========================
 
     private int estraiRitardo(String orarioFormattato) {
         try {

@@ -2,20 +2,18 @@ package model.gtfs;
 
 import java.util.*;
 
-/**
- * Classe che rappresenta la forma/tracciato di una rotta (GTFS Shapes)
- * Contiene la sequenza di coordinate GPS che descrivono il percorso della linea
- * Legge i dati dal file shapes.txt nella cartella resources
- */
+// Classe che rappresenta la forma/tracciato di una rotta (GTFS Shapes)
+ // Contiene la sequenza di coordinate GPS che descrivono il percorso della linea
+ // Legge i dati dal file shapes.txt nella cartella resources
+
 public class ShapeRoute {
 
     // Attributi della forma
     private String shapeId;              // ID univoco della forma
     private List<GeoPoint> geoPoints;    // Lista di punti geografici in ordine
 
-    /**
-     * Classe interna per rappresentare un punto geografico
-     */
+    // Classe interna per rappresentare un punto geografico
+
     public static class GeoPoint {
         private double latitude;         // Latitudine
         private double longitude;        // Longitudine
@@ -60,9 +58,8 @@ public class ShapeRoute {
         }
     }
 
-    /**
-     * Costruttore della forma
-     */
+    //Costruttore della forma
+
     public ShapeRoute(String shapeId) {
         this.shapeId = shapeId;
         this.geoPoints = new ArrayList<>();
@@ -90,63 +87,40 @@ public class ShapeRoute {
 
     //METODI DI MANIPOLAZIONE
 
-    /**
-     * Aggiunge un punto geografico alla forma
-     */
+    //Aggiunge un punto geografico alla forma
+
     public void aggiungiPunto(GeoPoint punto) {
         geoPoints.add(punto);
     }
 
-    /**
-     * Aggiunge un punto geografico con parametri
-     */
+    // Aggiunge un punto geografico con parametri
+
     public void aggiungiPunto(double lat, double lon, int sequence, double distanceTraveled) {
         geoPoints.add(new GeoPoint(lat, lon, sequence, distanceTraveled));
     }
 
-    /**
-     * Aggiunge un punto geografico con parametri (senza distanza)
-     */
+    // Aggiunge un punto geografico con parametri (senza distanza)
+
     public void aggiungiPunto(double lat, double lon, int sequence) {
         geoPoints.add(new GeoPoint(lat, lon, sequence));
     }
 
-    /**
-     * Rimuove un punto dalla forma
-     */
+    //Rimuove un punto dalla forma
+
     public void rimuoviPunto(int indice) {
         if (indice >= 0 && indice < geoPoints.size()) {
             geoPoints.remove(indice);
         }
     }
 
-    /**
-     * Ordina i punti per numero di sequenza
-     */
+    // Ordina i punti per numero di sequenza
+
     public void ordinaPunti() {
         geoPoints.sort(Comparator.comparingInt(GeoPoint::getSequence));
     }
 
-    //  METODI UTILI
-//
-//    /**
-//     * Ritorna il primo punto della forma (inizio della rotta)
-//     */
-//    public GeoPoint getPrimoPunto() {
-//        return geoPoints.isEmpty() ? null : geoPoints.get(0);
-//    }
-//
-//    /**
-//     * Ritorna l'ultimo punto della forma (fine della rotta)
-//     */
-//    public GeoPoint getUltimoPunto() {
-//        return geoPoints.isEmpty() ? null : geoPoints.get(geoPoints.size() - 1);
-//    }
+    // Calcola la lunghezza totale della rotta in km (somma delle distanze tra i punti consecutivi usando Haversine)
 
-    /**
-     * Calcola la lunghezza totale della rotta in km
-     * (somma delle distanze tra i punti consecutivi usando Haversine)
-     */
     public double calcolaLunghezzaRotta() {
         if (geoPoints.size() < 2) {
             return 0.0;
@@ -159,9 +133,8 @@ public class ShapeRoute {
         return lunghezzaTotale;
     }
 
-    /**
-     * Calcola la distanza tra due punti geografici usando la formula di Haversine
-     */
+    // Calcola la distanza tra due punti geografici usando la formula di Haversine
+
     private double calcolaDistanzaTraPunti(GeoPoint p1, GeoPoint p2) {
         final double RAGGIO_TERRA_KM = 6371;
 
@@ -205,73 +178,8 @@ public class ShapeRoute {
         return new AbstractMap.SimpleEntry<>(puntoVicino, distanzaMinima * 1000); // In metri
     }
 
-//    /**
-//     * Verifica se un punto è sulla rotta (entro una tolleranza in metri)
-//     *
-//     * @param lat Latitudine del punto da verificare
-//     * @param lon Longitudine del punto da verificare
-//     * @param tolleranzaMetri Tolleranza in metri
-//     * @return true se il punto è sulla rotta
-//     */
-//    public boolean isPuntoSullaRotta(double lat, double lon, double tolleranzaMetri) {
-//        Map.Entry<GeoPoint, Double> risultato = trovaPuntoPiuVicino(lat, lon);
-//        if (risultato == null) {
-//            return false;
-//        }
-//        return risultato.getValue() <= tolleranzaMetri;
-//    }
-//
-//    /**
-//     * Ritorna i punti della rotta in un intervallo geografico (bounding box)
-//     * Utile per zooming sulla mappa
-//     *
-//     * @param minLat Latitudine minima
-//     * @param maxLat Latitudine massima
-//     * @param minLon Longitudine minima
-//     * @param maxLon Longitudine massima
-//     * @return Lista di punti nel bounding box
-//     */
-//    public List<GeoPoint> getPuntiInBoundingBox(double minLat, double maxLat, double minLon, double maxLon) {
-//        List<GeoPoint> punti = new ArrayList<>();
-//
-//        for (GeoPoint p : geoPoints) {
-//            if (p.getLatitude() >= minLat && p.getLatitude() <= maxLat &&
-//                    p.getLongitude() >= minLon && p.getLongitude() <= maxLon) {
-//                punti.add(p);
-//            }
-//        }
-//
-//        return punti;
-//    }
-//
-//    /**
-//     * Calcola il bounding box della rotta
-//     *
-//     * @return Un array [minLat, maxLat, minLon, maxLon]
-//     */
-//    public double[] calcolaBoundingBox() {
-//        if (geoPoints.isEmpty()) {
-//            return null;
-//        }
-//
-//        double minLat = Double.MAX_VALUE;
-//        double maxLat = -Double.MAX_VALUE;
-//        double minLon = Double.MAX_VALUE;
-//        double maxLon = -Double.MAX_VALUE;
-//
-//        for (GeoPoint p : geoPoints) {
-//            minLat = Math.min(minLat, p.getLatitude());
-//            maxLat = Math.max(maxLat, p.getLatitude());
-//            minLon = Math.min(minLon, p.getLongitude());
-//            maxLon = Math.max(maxLon, p.getLongitude());
-//        }
-//
-//        return new double[]{minLat, maxLat, minLon, maxLon};
-//    }
+    // Ritorna una rappresentazione testuale della forma
 
-    /**
-     * Ritorna una rappresentazione testuale della forma
-     */
     @Override
     public String toString() {
         return "ShapeRoute{" +
@@ -281,9 +189,8 @@ public class ShapeRoute {
                 '}';
     }
 
-    /**
-     * Verifica se due forme sono uguali (basato sull'ID)
-     */
+    //Verifica se due forme sono uguali (basato sull'ID)
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -292,9 +199,8 @@ public class ShapeRoute {
         return shapeId.equals(shape.shapeId);
     }
 
-    /**
-     * Genera un hashcode basato sull'ID della forma
-     */
+    // Genera un hashcode basato sull'ID della forma
+
     @Override
     public int hashCode() {
         return shapeId.hashCode();

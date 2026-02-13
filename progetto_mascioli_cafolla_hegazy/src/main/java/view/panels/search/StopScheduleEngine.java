@@ -9,10 +9,10 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-/**
- * Engine che contiene la logica di calcolo orari per SearchResultsPanel.
- * Non usa Swing: restituisce direttamente le righe per la tabella.
- */
+
+//Engine che contiene la logica di calcolo orari per SearchResultsPanel.
+ // Non usa Swing: restituisce direttamente le righe per la tabella.
+
 public class StopScheduleEngine {
 
     private service.RealTimeDelayService delayService;
@@ -25,7 +25,6 @@ public class StopScheduleEngine {
         this.delayService = delayService;
     }
 
-    // PARO PARO la tua classe
     public static class OrarioRow {
         public String nomeLinea;
         public String direzione;
@@ -44,12 +43,10 @@ public class StopScheduleEngine {
         }
     }
 
-    /**
-     * - costruisce righe
-     * - costruisce righeConRT
-     * - sceglie righeDaMostrare (RT se c'è, altrimenti statico)
-     * - restituisce righeTabella
-     */
+     // costruisce righe
+     //costruisce righeConRT
+     // sceglie righeDaMostrare (RT se c'è, altrimenti statico)
+     // restituisce righeTabella
     public List<String[]> calcolaRigheTabella(
             Fermate fermata,
             List<StopTime> stopTimes,
@@ -155,14 +152,14 @@ public class StopScheduleEngine {
                         }
 
                         righeConRT.add(riga);
-                        System.out.println("[SearchResultsPanel] ✓ Linea " + riga.nomeLinea + " orario " + riga.orarioFormattato);
+                        System.out.println("[SearchResultsPanel]  Linea " + riga.nomeLinea + " orario " + riga.orarioFormattato);
                     }
                 }
 
                 System.out.println("═══════════════════════════════════════════════");
 
             } catch (Exception e) {
-                System.err.println("[SearchResultsPanel] ✗ Errore caricamento ritardi: " + e.getMessage());
+                System.err.println("[SearchResultsPanel]  Errore caricamento ritardi: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -178,7 +175,7 @@ public class StopScheduleEngine {
                 mappaUnica.putIfAbsent(chiaveUnica, riga); // Tiene solo la prima
             }
             righeDaMostrare = new ArrayList<>(mappaUnica.values());
-            System.out.println("[SearchResultsPanel] ✓ Mostrando " + righeDaMostrare.size() + " linee REAL-TIME (rimosse " + (righeConRT.size() - righeDaMostrare.size()) + " duplicati)");
+            System.out.println("[SearchResultsPanel] Mostrando " + righeDaMostrare.size() + " linee REAL-TIME (rimosse " + (righeConRT.size() - righeDaMostrare.size()) + " duplicati)");
         } else {
             // Anche per lo statico: rimuovi duplicati linea+orario
             Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
@@ -187,7 +184,7 @@ public class StopScheduleEngine {
                 mappaUnica.putIfAbsent(chiaveUnica, riga);
             }
             righeDaMostrare = new ArrayList<>(mappaUnica.values());
-            System.out.println("[SearchResultsPanel] ⚠ Nessun dato RT, mostrando " + righeDaMostrare.size() + " orari statici (rimosse " + (righe.size() - righeDaMostrare.size()) + " duplicati)");
+            System.out.println("[SearchResultsPanel]  Nessun dato RT, mostrando " + righeDaMostrare.size() + " orari statici (rimosse " + (righe.size() - righeDaMostrare.size()) + " duplicati)");
         }
 
         //  Converti in String[] per la tabella

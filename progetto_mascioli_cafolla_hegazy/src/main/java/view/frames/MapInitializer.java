@@ -14,19 +14,19 @@ import org.jxmapviewer.viewer.TileFactoryInfo;
 import javax.swing.event.MouseInputListener;
 import java.io.File;
 
-// >>> NUOVE IMPORT (serve per i test)
+//  (serve per i test)
 import java.util.Objects;              // serve per i test
 import java.util.function.Supplier;    // serve per i test
 
-/**
- * Classe di supporto per inizializzare e configurare JXMapViewer.
- * Mantiene la logica di setup fuori dalla JFrame principale.
- */
+
+ //Classe di supporto per inizializzare e configurare JXMapViewer.
+ //Mantiene la logica di setup fuori dalla JFrame principale.
+
 public class MapInitializer {
 
-    // =========================
+
     // DIPENDENZE INIETTABILI (serve per i test)
-    // =========================
+
 
     private static Supplier<java.util.Timer> timerFactory =
             () -> new java.util.Timer(true); // serve per i test
@@ -36,7 +36,7 @@ public class MapInitializer {
 
     private static boolean enableConnectivityTimer = true; // serve per i test
 
-    // ====== metodi SOLO per i test ======
+    // metodi solo per i test
 
     static void setTimerFactoryForTest(Supplier<java.util.Timer> factory) { // serve per i test
         timerFactory = Objects.requireNonNull(factory);
@@ -84,7 +84,7 @@ public class MapInitializer {
         mapViewer.addKeyListener(new PanKeyListener(mapViewer));
         mapViewer.addMouseListener(new CenterMapListener(mapViewer));
 
-        // --- AVVIO CONTROLLO PERIODICO CONNETTIVITÀ ---
+        //AVVIO CONTROLLO PERIODICO CONNETTIVITÀ ---
         if (enableConnectivityTimer) { // serve per i test
             java.util.Timer timer = timerFactory.get(); // serve per i test
             timer.scheduleAtFixedRate(new java.util.TimerTask() {

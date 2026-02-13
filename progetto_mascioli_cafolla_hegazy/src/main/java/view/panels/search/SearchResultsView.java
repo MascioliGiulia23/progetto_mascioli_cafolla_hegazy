@@ -77,9 +77,7 @@ public class SearchResultsView extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    // =========================
     // API PUBBLICA (per SearchResultsPanel)
-    // =========================
 
     public JPanel getResultsContainer() {
         return resultsContainer;

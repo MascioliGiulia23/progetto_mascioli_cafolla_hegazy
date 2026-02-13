@@ -38,7 +38,7 @@ public class SearchBar extends JPanel {
         searchField.setOpaque(false);
         searchField.setCaretColor(new Color(70, 130, 180));
 
-        // ⭐ NUOVO: Timer con debounce di 300ms
+        //Timer con debounce di 300ms
         searchTimer = new javax.swing.Timer(300, e -> {
             String testo = getSearchText();
             if (testo.length() >= 2 && onSearchListener != null) { // minimo 2 caratteri
@@ -48,7 +48,7 @@ public class SearchBar extends JPanel {
         });
         searchTimer.setRepeats(false); // esegui una volta sola
 
-        // ⭐ NUOVO: DocumentListener per intercettare ogni cambiamento
+        //DocumentListener per intercettare ogni cambiamento
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -90,7 +90,7 @@ public class SearchBar extends JPanel {
             }
         });
 
-        // ⭐ MODIFICATO: Invio esegue ricerca immediata e ferma il timer
+        // Invio esegue ricerca immediata e ferma il timer
         searchField.addActionListener(e -> {
             searchTimer.stop(); // ferma il timer
             if (onSearchListener != null) {
@@ -129,7 +129,7 @@ public class SearchBar extends JPanel {
         searchButton.setPreferredSize(new Dimension(80, 35));
         searchButton.setFocusPainted(false);
 
-        // ⭐ MODIFICATO: anche il bottone ferma il timer
+        //anche il bottone ferma il timer
         searchButton.addActionListener(e -> {
             searchTimer.stop();
             if (onSearchListener != null) {
@@ -184,14 +184,12 @@ public class SearchBar extends JPanel {
     }
 
     public void clearSearch() {
-        searchTimer.stop(); // ⭐ NUOVO: ferma timer quando pulisci
+        searchTimer.stop(); // ferma timer quando pulisci
         searchField.setText("Cerca fermate, stazioni...");
         searchField.setForeground(new Color(160, 160, 160));
     }
 
-    // ==================================================
     // AGGIUNTE (serve per i test)
-    // ==================================================
 
     JTextField getSearchFieldForTest() { // serve per i test
         return searchField; // serve per i test

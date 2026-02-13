@@ -219,9 +219,8 @@ public class MapController {
         realtimeBusTimer.start();
     }
 
-    /**
-     * Aggiorna le posizioni dei bus sulla mappa
-     */
+    //Aggiorna le posizioni dei bus sulla mappa
+
     private void aggiornaPosizoniBus(Route rotta, Trip trip) {
         System.out.println("[Real-time] Aggiornamento posizioni bus...");
 
@@ -232,10 +231,10 @@ public class MapController {
                         trip.getDirectionId()
                 );
 
-        // Rimuovi i bus precedenti
+        // Rimuove i bus precedenti
         waypointDrawer.clearRealtimeBusWaypoints();
 
-        // Aggiungi i nuovi bus
+        // Aggiunge i nuovi bus
         List<BusWaypoint> busWaypoints = new ArrayList<>();
         for (GtfsRealtimeVehicleService.VehicleData vehicle : vehicles) {
             BusWaypoint busWp = new BusWaypoint(
@@ -251,16 +250,15 @@ public class MapController {
         System.out.println("[Real-time] ✓ " + busWaypoints.size() + " bus aggiornati sulla mappa");
     }
 
-    /**
-     * Ferma l'aggiornamento real-time dei bus
-     */
+    //Ferma l'aggiornamento real-time dei bus
+
     public void fermaAggiornamentoRealtimeBus() {
         if (realtimeBusTimer != null && realtimeBusTimer.isRunning()) {
             realtimeBusTimer.stop();
             System.out.println("[Real-time] Timer fermato");
         }
 
-        // NUOVO: rimuovi anche i waypoint dei bus
+        // rimuove i waypoint dei bus
         if (waypointDrawer != null) {
             waypointDrawer.clearRealtimeBusWaypoints();
             System.out.println("[Real-time] Waypoint bus rimossi");

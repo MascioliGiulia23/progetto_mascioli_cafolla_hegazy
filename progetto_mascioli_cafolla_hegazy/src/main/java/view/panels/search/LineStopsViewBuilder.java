@@ -118,7 +118,7 @@ public class LineStopsViewBuilder {
             resultsContainer.add(scroll);
         }
 
-        JButton backBtn = new JButton("← Torna alle linee");
+        JButton backBtn = new JButton("Torna alle linee");
         backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         backBtn.addActionListener(e -> {
             if (onBackToLines != null) onBackToLines.run();

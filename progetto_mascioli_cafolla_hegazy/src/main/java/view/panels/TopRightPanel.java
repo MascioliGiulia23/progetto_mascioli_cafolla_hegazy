@@ -100,9 +100,8 @@ public class TopRightPanel extends JPanel {
         repaint();
     }
 
-    /**
-     * Aggiorna le rotte visualizzate
-     */
+     //Aggiorna le rotte visualizzate
+
     public void aggiornaRotte(List<Route> rotte) {
         // Metodo per gestire l'aggiornamento delle rotte
         if (rotte != null && !rotte.isEmpty()) {

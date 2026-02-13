@@ -17,9 +17,9 @@ public class WaypointDrawer {
     private final Set<BusWaypoint> waypoints = new HashSet<>();
     private final RouteDrawer routeDrawer;
 
-    // =========================
-    // AGGIUNTA (serve per i test)
-    // =========================
+
+   //(serve per i test)
+
     private Painter<JXMapViewer> lastOverlayPainterForTest = null; // serve per i test
 
     public WaypointDrawer(JXMapViewer mapViewer, RouteDrawer routeDrawer) {
@@ -44,12 +44,12 @@ public class WaypointDrawer {
     public void clearWaypoints() {
         waypoints.clear();
         updatePainters();
-        System.out.println("✓ Waypoint rimossi dalla mappa");
+        System.out.println("Waypoint rimossi dalla mappa");
     }
 
-    /**
-     * Rimuove solo i waypoint dei bus real-time, mantenendo quelli delle fermate
-     */
+
+     //Rimuove solo i waypoint dei bus real-time, mantenendo quelli delle fermate
+
     public void clearRealtimeBusWaypoints() {
         waypoints.removeIf(wp -> wp.getType() == BusWaypoint.WaypointType.REALTIME_BUS);
         updatePainters();
@@ -73,25 +73,23 @@ public class WaypointDrawer {
             CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(allPainters);
             mapViewer.setOverlayPainter(compoundPainter);
 
-            // =========================
-            // AGGIUNTA (serve per i test)
-            // =========================
+
+            // (serve per i test)
+
             lastOverlayPainterForTest = compoundPainter; // serve per i test
 
-            System.out.println("✓ Linea + waypoint disegnati correttamente.");
+            System.out.println(" Linea + waypoint disegnati correttamente.");
         } else {
             mapViewer.setOverlayPainter(null);
 
-            // =========================
-            // AGGIUNTA (serve per i test)
-            // =========================
+
+         // (serve per i test)
+
             lastOverlayPainterForTest = null; // serve per i test
         }
     }
 
-    // ==================================================
     // METODI DI SUPPORTO (serve per i test)
-    // ==================================================
 
     int getWaypointsCountForTest() {          // serve per i test
         return waypoints.size();
@@ -105,9 +103,7 @@ public class WaypointDrawer {
         return lastOverlayPainterForTest;
     }
 
-    // ==================================================
     // CLASSE INTERNA DI DISEGNO (INTOCCATA)
-    // ==================================================
     private static class WaypointPainter implements Painter<JXMapViewer> {
         private final Set<BusWaypoint> waypoints;
 

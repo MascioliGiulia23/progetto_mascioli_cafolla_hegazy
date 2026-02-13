@@ -12,10 +12,10 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Classe che gestisce il disegno di una o più tratte (shapes GTFS) sulla mappa.
- * Non modifica JXMapViewer, ma agisce come "overlay painter".
- */
+
+ //Classe che gestisce il disegno di una o più tratte (shapes GTFS) sulla mappa.
+ //Non modifica JXMapViewer, ma agisce come "overlay painter".
+
 public class RouteDrawer {
 
     private final JXMapViewer mapViewer;
@@ -25,15 +25,13 @@ public class RouteDrawer {
         this.mapViewer = mapViewer;
     }
 
-    /**
-     * Disegna una singola shape sulla mappa (tratta bus)
-     *
-     * @param shapeRoute La shape da disegnare
-     * @param color      Il colore della linea (es. Color.BLUE)
-     */
+
+     // Disegna una singola shape sulla mappa (tratta bus)
+     // @param shapeRoute La shape da disegnare
+     //@param color      Il colore della linea (es. Color.BLUE)
     public void drawShape(ShapeRoute shapeRoute, Color color) {
         if (shapeRoute == null || shapeRoute.getGeoPoints().isEmpty()) {
-            System.err.println("⚠ Shape vuota o nulla, impossibile disegnare!");
+            System.err.println("Shape vuota o nulla, impossibile disegnare!");
             return;
         }
 
@@ -46,17 +44,15 @@ public class RouteDrawer {
         // >>> usa metodo comune (serve per i test)
         drawGeoPositions(geoPositions, color); // serve per i test
 
-        System.out.println("✓ Tratta disegnata per shape_id=" + shapeRoute.getShapeId() +
+        System.out.println("Tratta disegnata per shape_id=" + shapeRoute.getShapeId() +
                 " (" + geoPositions.size() + " punti)");
     }
 
-    // =========================
     // NUOVO METODO (serve per i test)
     // Permette di testare RouteDrawer senza dipendere da ShapeRoute
-    // =========================
     void drawGeoPositions(List<GeoPosition> geoPositions, Color color) { // serve per i test
         if (geoPositions == null || geoPositions.isEmpty()) { // serve per i test
-            System.err.println("⚠ Track vuota o nulla, impossibile disegnare!"); // serve per i test
+            System.err.println("Track vuota o nulla, impossibile disegnare!"); // serve per i test
             return; // serve per i test
         }
 
@@ -73,9 +69,9 @@ public class RouteDrawer {
         mapViewer.setAddressLocation(centro); // serve per i test
     }
 
-    /**
-     * Cancella tutte le linee disegnate sulla mappa
-     */
+
+     //Cancella tutte le linee disegnate sulla mappa
+
     public void clearAll() {
         painters.clear();
         mapViewer.setOverlayPainter(null);
@@ -94,14 +90,13 @@ public class RouteDrawer {
         return new ArrayList<>();
     }
 
-    // >>> getter di supporto (serve per i test)
+    //getter di supporto (serve per i test)
     int getPaintersCountForTest() { // serve per i test
         return painters.size(); // serve per i test
     }
 
-    /**
-     * Classe interna che disegna una singola linea sulla mappa
-     */
+
+    //Classe interna che disegna una singola linea sulla mappa
     public static class RoutePainter implements Painter<JXMapViewer> {
         private final List<GeoPosition> track;
         private final Color color;

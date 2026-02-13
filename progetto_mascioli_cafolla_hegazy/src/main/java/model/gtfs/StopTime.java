@@ -2,10 +2,9 @@ package model.gtfs;
 
 import java.time.LocalTime;
 
-/**
- * Classe che rappresenta l'orario di arrivo/partenza in una fermata (GTFS Stop Times)
- * Legge i dati dal file stop_times.txt nella cartella resources
- */
+ // Classe che rappresenta l'orario di arrivo/partenza in una fermata (GTFS Stop Times)
+ // Legge i dati dal file stop_times.txt nella cartella resources
+
 public class StopTime {
 
     // Attributi dell'orario di fermata
@@ -19,9 +18,8 @@ public class StopTime {
     private int dropOffType;            // 0=regolare, 1=nessuno scalo, 2=chiama preventivamente, 3=accordi driver
     private double shapeDistTraveled;   // Distanza percorsa sulla forma (opzionale)
 
-    /**
-     * Costruttore completo
-     */
+    // Costruttore completo
+
     public StopTime(String tripId, LocalTime arrivalTime, LocalTime departureTime, String stopId,
                     int stopSequence, String stopHeadsign, int pickupType, int dropOffType,
                     double shapeDistTraveled) {
@@ -36,9 +34,8 @@ public class StopTime {
         this.shapeDistTraveled = shapeDistTraveled;
     }
 
-    /**
-     * Costruttore semplificato
-     */
+    //Costruttore semplificato
+
     public StopTime(String tripId, LocalTime arrivalTime, LocalTime departureTime, String stopId, int stopSequence) {
         this.tripId = tripId;
         this.arrivalTime = arrivalTime;
@@ -50,8 +47,6 @@ public class StopTime {
         this.dropOffType = 0;
         this.shapeDistTraveled = 0.0;
     }
-
-    // ==================== GETTERS ====================
 
     public String getTripId() {
         return tripId;
@@ -89,18 +84,9 @@ public class StopTime {
         return shapeDistTraveled;
     }
 
-    // ==================== SETTERS ====================
 
     public void setTripId(String tripId) {
         this.tripId = tripId;
-    }
-
-    public void setArrivalTime(LocalTime arrivalTime) {
-        this.arrivalTime = arrivalTime;
-    }
-
-    public void setDepartureTime(LocalTime departureTime) {
-        this.departureTime = departureTime;
     }
 
     public void setStopId(String stopId) {
@@ -111,27 +97,9 @@ public class StopTime {
         this.stopSequence = stopSequence;
     }
 
-    public void setStopHeadsign(String stopHeadsign) {
-        this.stopHeadsign = stopHeadsign;
-    }
 
-    public void setPickupType(int pickupType) {
-        this.pickupType = pickupType;
-    }
+    // Ritorna il tempo di fermata (quanto tempo l'autobus sta fermo)
 
-    public void setDropOffType(int dropOffType) {
-        this.dropOffType = dropOffType;
-    }
-
-    public void setShapeDistTraveled(double shapeDistTraveled) {
-        this.shapeDistTraveled = shapeDistTraveled;
-    }
-
-    // ==================== METODI UTILI ====================
-
-    /**
-     * Ritorna il tempo di fermata (quanto tempo l'autobus sta fermo)
-     */
     public long getTempoFermata() {
         if (arrivalTime == null || departureTime == null) {
             return 0;
@@ -139,30 +107,26 @@ public class StopTime {
         return java.time.temporal.ChronoUnit.SECONDS.between(arrivalTime, departureTime);
     }
 
-    /**
-     * Verifica se questo è il primo stop della corsa
-     */
+    // Verifica se questo è il primo stop della corsa
+
     public boolean isPrimoStop() {
         return stopSequence == 1;
     }
 
-    /**
-     * Verifica se è possibile scendere a questa fermata
-     */
+    // Verifica se è possibile scendere a questa fermata
+
     public boolean isDropoffPermesso() {
         return dropOffType == 0; // 0 = regolare
     }
 
-    /**
-     * Verifica se è possibile salire a questa fermata
-     */
+    // Verifica se è possibile salire a questa fermata
+
     public boolean isPickupPermesso() {
         return pickupType == 0; // 0 = regolare
     }
 
-    /**
-     * Ritorna una descrizione del tipo di ritiro
-     */
+    // Ritorna una descrizione del tipo di ritiro
+
     public String getPickupTypeDescrizione() {
         return switch (pickupType) {
             case 0 -> "Regolare";
@@ -173,9 +137,8 @@ public class StopTime {
         };
     }
 
-    /**
-     * Ritorna una descrizione del tipo di scalo
-     */
+    //Ritorna una descrizione del tipo di scalo
+
     public String getDropOffTypeDescrizione() {
         return switch (dropOffType) {
             case 0 -> "Regolare";
@@ -186,10 +149,9 @@ public class StopTime {
         };
     }
 
-    /**
-     * Converte una stringa di tempo in formato HH:MM:SS a LocalTime
-     * Supporta anche formati con ore >= 24 (utile per corse notturne)
-     */
+    // Converte una stringa di tempo in formato HH:MM:SS a LocalTime
+    // Supporta anche formati con ore >= 24 (utile per corse notturne)
+
     public static LocalTime parseTempoGTFS(String tempoStr) {
         if (tempoStr == null || tempoStr.isEmpty()) {
             return null;
@@ -216,9 +178,8 @@ public class StopTime {
         }
     }
 
-    /**
-     * Converte un integer (0/1) a integer di pickup/dropoff
-     */
+    //Converte un integer (0/1) a integer di pickup/dropoff
+
     public static int parsePickupDropoffType(String typeStr) {
         try {
             return Integer.parseInt(typeStr.trim());
@@ -227,9 +188,8 @@ public class StopTime {
         }
     }
 
-    /**
-     * Ritorna una rappresentazione testuale
-     */
+    //Ritorna una rappresentazione testuale
+
     @Override
     public String toString() {
         return "StopTime{" +
@@ -241,9 +201,8 @@ public class StopTime {
                 '}';
     }
 
-    /**
-     * Verifica se due orari di fermata sono uguali
-     */
+    //Verifica se due orari di fermata sono uguali
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -252,9 +211,8 @@ public class StopTime {
         return tripId.equals(that.tripId) && stopSequence == that.stopSequence;
     }
 
-    /**
-     * Genera un hashcode
-     */
+    // Genera un hashcode
+
     @Override
     public int hashCode() {
         return (tripId + stopSequence).hashCode();

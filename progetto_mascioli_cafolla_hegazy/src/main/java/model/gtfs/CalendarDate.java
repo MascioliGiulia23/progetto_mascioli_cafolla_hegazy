@@ -5,10 +5,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.DayOfWeek;
 import java.util.List;
 
-/**
- * Classe che rappresenta il calendario operativo (GTFS Calendar e Calendar_dates)
- * Gestisce quali giorni una linea/corsa è operativa
- */
+//Classe che rappresenta il calendario operativo (GTFS Calendar e Calendar_dates)
+// Gestisce quali giorni una linea/corsa è operativa
+
 public class CalendarDate {
 
     // Attributi del calendario
@@ -79,18 +78,6 @@ public class CalendarDate {
         return monday;
     }
 
-    public boolean isTuesday() {
-        return tuesday;
-    }
-
-    public boolean isWednesday() {
-        return wednesday;
-    }
-
-    public boolean isThursday() {
-        return thursday;
-    }
-
     public boolean isFriday() {
         return friday;
     }
@@ -99,67 +86,6 @@ public class CalendarDate {
         return saturday;
     }
 
-    public boolean isSunday() {
-        return sunday;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    // ==================== SETTERS ====================
-
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public void setExceptionType(int exceptionType) {
-        this.exceptionType = exceptionType;
-    }
-
-    public void setMonday(boolean monday) {
-        this.monday = monday;
-    }
-
-    public void setTuesday(boolean tuesday) {
-        this.tuesday = tuesday;
-    }
-
-    public void setWednesday(boolean wednesday) {
-        this.wednesday = wednesday;
-    }
-
-    public void setThursday(boolean thursday) {
-        this.thursday = thursday;
-    }
-
-    public void setFriday(boolean friday) {
-        this.friday = friday;
-    }
-
-    public void setSaturday(boolean saturday) {
-        this.saturday = saturday;
-    }
-
-    public void setSunday(boolean sunday) {
-        this.sunday = sunday;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
 
     // ==================== METODI UTILI ====================
 
@@ -192,16 +118,8 @@ public class CalendarDate {
         };
     }
 
-//    /**
-//     * Ritorna i giorni operativi come array di booleani
-//     */
-//    public boolean[] getGiorniOperativi() {
-//        return new boolean[]{monday, tuesday, wednesday, thursday, friday, saturday, sunday};
-//    }
+    //Ritorna il nome dei giorni operativi come stringa
 
-    /**
-     * Ritorna il nome dei giorni operativi come stringa
-     */
     public String getGiorniOperativiDescrizione() {
         StringBuilder sb = new StringBuilder();
         if (monday) sb.append("Lun ");
@@ -214,44 +132,26 @@ public class CalendarDate {
         return sb.toString().trim();
     }
 
-//    /**
-//     * Verifica se il servizio è operativo durante i giorni feriali
-//     */
-//    public boolean isOperativoFeriali() {
-//        return monday && tuesday && wednesday && thursday && friday;
-//    }
-//
-//    /**
-//     * Verifica se il servizio è operativo nel fine settimana
-//     */
-//    public boolean isOperativoWeekend() {
-//        return saturday || sunday;
-//    }
+    // Verifica se il servizio è operativo tutti i giorni
 
-    /**
-     * Verifica se il servizio è operativo tutti i giorni
-     */
     public boolean isOperativoTuttiIGiorni() {
         return monday && tuesday && wednesday && thursday && friday && saturday && sunday;
     }
 
-    /**
-     * Verifica se il servizio è operativo solo nei giorni feriali
-     */
+    // Verifica se il servizio è operativo solo nei giorni feriali
+
     public boolean isOperativoSoloFeriali() {
         return monday && tuesday && wednesday && thursday && friday && !saturday && !sunday;
     }
 
-    /**
-     * Verifica se il servizio è operativo solo nel fine settimana
-     */
+    //Verifica se il servizio è operativo solo nel fine settimana
+
     public boolean isOperativoSoloWeekend() {
         return !monday && !tuesday && !wednesday && !thursday && !friday && (saturday || sunday);
     }
 
-    /**
-     * Ritorna una descrizione del tipo di servizio
-     */
+    //Ritorna una descrizione del tipo di servizio
+
     public String getTipoServizio() {
         if (isOperativoTuttiIGiorni()) {
             return "Tutti i giorni";

@@ -358,9 +358,9 @@ public class RealTimeDelayService {
     }
 
 
-    /**
-     * ⭐ METODO HELPER: Ottiene delay medio per una linea
-     */
+
+     // METODO HELPER: Ottiene delay medio per una linea
+
     public int getAverageDelay(String stopId, String routeShortName) {
         Map<String, List<Integer>> delays = getAllDelaysForStop(stopId);
 

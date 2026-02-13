@@ -477,7 +477,7 @@ public class SearchResultsPanel extends JPanel {
 
         // BOTTONE: Torna alle fermate della linea (SOLO se contesto è "LINEA")
         if ("LINEA".equalsIgnoreCase(contesto) && rottaCorrente != null && direzioneCorrente != null) {
-            JButton backBtn = new JButton("← Torna alle fermate della linea");
+            JButton backBtn = new JButton("Torna alle fermate della linea");
             backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             backBtn.addActionListener(e -> {
                 clearResults();
@@ -487,7 +487,7 @@ public class SearchResultsPanel extends JPanel {
             view.getResultsContainer().add(backBtn);
         }
         if ("RICERCA".equalsIgnoreCase(contesto)) {
-            JButton backBtn = new JButton("← Torna alle fermate");
+            JButton backBtn = new JButton("Torna alle fermate");
             backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
             backBtn.addActionListener(e -> {
                 clearResults();

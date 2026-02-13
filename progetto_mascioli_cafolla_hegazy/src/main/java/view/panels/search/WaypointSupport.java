@@ -12,13 +12,12 @@ import java.util.*;
 
 public class WaypointSupport {
 
-    /**
-     * Disegna (o aggiorna) il waypoint della singola fermata in "mostraOrariFermata".
-     * Replica 1:1 la logica che hai ora:
-     * - clearWaypoints()
-     * - controlla che esista almeno un trip valido + rotta valida per quella fermata
-     * - se sì, aggiunge 1 waypoint.
-     */
+     // Disegna (o aggiorna) il waypoint della singola fermata in "mostraOrariFermata".
+     //Replica 1:1 la logica che hai ora:
+     // clearWaypoints()
+     //controlla che esista almeno un trip valido + rotta valida per quella fermata
+     // se sì, aggiunge 1 waypoint.
+
     public void updateStopWaypoint(WaypointDrawer waypointDrawer,
                                    Fermate fermata,
                                    Map<String, Trip> tripMap,
@@ -49,14 +48,13 @@ public class WaypointSupport {
         }
     }
 
-    /**
-     * Disegna i waypoint di tutte le fermate di una linea (per quella direzione/trip).
-     * Replica 1:1 la logica che avevi in mostraFermateLinea:
-     * - clearWaypoints()
-     * - filtra stopTimes per tripId della direzione
-     * - ordina per stopSequence
-     * - aggiunge waypoint per ogni fermata trovata.
-     */
+     // Disegna i waypoint di tutte le fermate di una linea (per quella direzione/trip).
+     // Replica 1:1 la logica che avevi in mostraFermateLinea:
+     // clearWaypoints()
+     // filtra stopTimes per tripId della direzione
+     // ordina per stopSequence
+     // aggiunge waypoint per ogni fermata trovata.
+
     public void updateLineWaypoints(WaypointDrawer waypointDrawer,
                                     Trip direzioneScelta,
                                     List<StopTime> stopTimes,
@@ -94,10 +92,10 @@ public class WaypointSupport {
         }
     }
 
-    /**
-     * Utility semplice se vuoi richiamarla quando premi "torna indietro"
-     * (replica waypointDrawer.clearWaypoints()).
-     */
+
+     //Utility semplice se vuoi richiamarla quando premi "torna indietro"
+     // (replica waypointDrawer.clearWaypoints()).
+
     public void clear(WaypointDrawer waypointDrawer) {
         if (waypointDrawer != null) waypointDrawer.clearWaypoints();
     }

@@ -1,9 +1,8 @@
 package model.gtfs;
 
-/**
- * Classe che rappresenta una fermata del trasporto pubblico (GTFS Stop)
- * Legge i dati dal file stops.txt nella cartella resources
- */
+// Classe che rappresenta una fermata del trasporto pubblico (GTFS Stop)
+ //Legge i dati dal file stops.txt nella cartella resources
+
 public class Fermate {
 
     // Attributi della fermata
@@ -31,9 +30,8 @@ public class Fermate {
         this.parentStation = parentStation;
     }
 
-    /**
-     * Costruttore semplificato (con solo i campi essenziali)
-     */
+    //Costruttore semplificato (con solo i campi essenziali)
+
     public Fermate(String stopId, String stopName, double stopLat, double stopLon) {
         this.stopId = stopId;
         this.stopName = stopName;
@@ -75,53 +73,8 @@ public class Fermate {
         return locationType;
     }
 
-    public String getParentStation() {
-        return parentStation;
-    }
 
-    //SETTERS
-//
-//    public void setStopId(String stopId) {
-//        this.stopId = stopId;
-//    }
-//
-//    public void setStopName(String stopName) {
-//        this.stopName = stopName;
-//    }
-//
-//    public void setStopDesc(String stopDesc) {
-//        this.stopDesc = stopDesc;
-//    }
-//
-//    public void setStopLat(double stopLat) {
-//        this.stopLat = stopLat;
-//    }
-//
-//    public void setStopLon(double stopLon) {
-//        this.stopLon = stopLon;
-//    }
-//
-//    public void setStopUrl(String stopUrl) {
-//        this.stopUrl = stopUrl;
-//    }
-//
-//    public void setLocationType(String locationType) {
-//        this.locationType = locationType;
-//    }
-//
-//    public void setParentStation(String parentStation) {
-//        this.parentStation = parentStation;
-//    }
 
-    // METODI UTILI
-
-//    /**
-//     * Calcola la distanza in kilometri tra questa fermata e un'altra
-//     * Usa la formula di Haversine per la distanza tra due punti sulla Terra
-//     *
-//     * @param altroStop La fermata con cui calcolare la distanza
-//     * @return Distanza in kilometri
-//     */
     public double calcolaDistanza(Fermate altroStop) {
         final double RAGGIO_TERRA_KM = 6371; // Raggio medio della Terra in km
 
@@ -149,9 +102,8 @@ public class Fermate {
         return calcolaDistanza(altroStop) * 1000;
     }
 
-    /**
-     * Ritorna una rappresentazione testuale della fermata
-     */
+    // Ritorna una rappresentazione testuale della fermata
+
     @Override
     public String toString() {
         return "Fermate{" +
@@ -163,9 +115,8 @@ public class Fermate {
                 '}';
     }
 
-    /**
-     * Verifica se due fermate sono uguali (basato sull'ID)
-     */
+    //Verifica se due fermate sono uguali (basato sull'ID)
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -174,9 +125,8 @@ public class Fermate {
         return stopId.equals(fermate.stopId);
     }
 
-    /**
-     * Genera un hashcode basato sull'ID della fermata
-     */
+    //Genera un hashcode basato sull'ID della fermata
+
     @Override
     public int hashCode() {
         return stopId.hashCode();

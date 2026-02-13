@@ -33,7 +33,7 @@ public class UserProfilePanel extends JPanel {
     private JButton profileTogglePasswordButton;
     private JButton logoutButton;
 
-    // ← NUOVO: Listener per il login
+    // Listener per il login
     private Runnable onLoginListener;
 
     private enum State {
@@ -43,7 +43,7 @@ public class UserProfilePanel extends JPanel {
     private boolean passwordVisible = false;
 
     public UserProfilePanel() {
-        // ← NUOVO: Carica gli utenti salvati
+        // Carica gli utenti salvati
         UserManager.caricaUtenti();
         initializeUI();
     }
@@ -427,7 +427,7 @@ public class UserProfilePanel extends JPanel {
                         for (Component sub : pane.getComponents()) {
                             if (sub instanceof FavoritesPanel favPanel) {
                                 favPanel.clearFavorites();
-                                System.out.println("✓ Preferiti svuotati al logout");
+                                System.out.println("Preferiti svuotati al logout");
                             }
                         }
                     }

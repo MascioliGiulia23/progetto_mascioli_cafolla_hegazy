@@ -15,9 +15,7 @@ public class FavoritesPanel extends JPanel {
 
     private java.util.function.Consumer<Favorite> onFavoriteClickListener;
 
-    // =========================
     // AGGIUNTE (serve per i test)
-    // =========================
     private java.util.function.Supplier<String> usernameSupplier = // serve per i test
             () -> UserProfilePanel.getCurrentUsernameStatic(); // serve per i test
 
@@ -26,7 +24,7 @@ public class FavoritesPanel extends JPanel {
 
     private java.util.function.BiConsumer<String, Favorite> favoriteRemover = // serve per i test
             (u, f) -> UserManager.rimuoviPreferito(u, f); // serve per i test
-    // =========================
+
 
     public FavoritesPanel() {
         favorites = new ArrayList<>();
@@ -89,22 +87,19 @@ public class FavoritesPanel extends JPanel {
     public void caricaPreferiti() {
         clearFavorites();
 
-        // =========================
-        // MODIFICA MINIMA (serve per i test): usa supplier invece di chiamata statica diretta
-        // =========================
-        String username = usernameSupplier.get(); // serve per i test
-        // =========================
+        //  (serve per i test): usa supplier invece di chiamata statica diretta
 
+        String username = usernameSupplier.get(); // serve per i test
         if (username == null || username.isEmpty()) {
             addEmptyMessageNotLogged();
             return;
         }
 
-        // =========================
-        // MODIFICA MINIMA (serve per i test): usa provider invece di chiamata statica diretta
-        // =========================
+
+        // (serve per i test): usa provider invece di chiamata statica diretta
+
         java.util.List<Favorite> preferiti = favoritesProvider.apply(username); // serve per i test
-        // =========================
+
 
         if (preferiti == null || preferiti.isEmpty()) {
             addEmptyMessageNoFavorites();
@@ -157,9 +152,9 @@ public class FavoritesPanel extends JPanel {
         removeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         removeBtn.addActionListener(e -> {
-            // =========================
-            // MODIFICA MINIMA (serve per i test): usa supplier + remover invece di static diretti
-            // =========================
+
+            //(serve per i test): usa supplier + remover invece di static diretti
+
             String currentUser = usernameSupplier.get(); // serve per i test
             if (currentUser != null) {
                 favoriteRemover.accept(currentUser, fav); // serve per i test
@@ -261,9 +256,7 @@ public class FavoritesPanel extends JPanel {
         repaint();
     }
 
-    // =========================
     // SETTER DI DIPENDENZE (serve per i test)
-    // =========================
     void setUsernameSupplierForTest(java.util.function.Supplier<String> supplier) { // serve per i test
         this.usernameSupplier = supplier; // serve per i test
     }
@@ -283,7 +276,6 @@ public class FavoritesPanel extends JPanel {
     int getModelFavoritesCountForTest() { // serve per i test
         return favorites.size(); // serve per i test
     }
-    // =========================
 
     public static class FavoriteItem extends JPanel {
         private String name;

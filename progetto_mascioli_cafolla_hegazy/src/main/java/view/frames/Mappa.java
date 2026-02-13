@@ -21,7 +21,7 @@ import view.map.BusWaypoint;
 import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
 
-// >>> NUOVI IMPORT (serve per i test)
+// (serve per i test)
 import java.awt.GraphicsEnvironment; // serve per i test
 
 public class Mappa extends JFrame {
@@ -56,9 +56,9 @@ public class Mappa extends JFrame {
     private RealTimeDelayService delayService;
     private ServiceQualityPanel qualityPanel;
 
-    // =========================
+
     // COSTRUTTORE PER TEST (serve per i test)
-    // =========================
+
     Mappa(boolean testMode) { // serve per i test
         super("Roma Bus Tracker"); // serve per i test
 
@@ -104,10 +104,8 @@ public class Mappa extends JFrame {
     public Mappa() {
         super("Roma Bus Tracker");
 
-        // =========================
         // BLOCCO PER TEST (serve per i test)
         // Se qualcuno istanzia Mappa(true) usa l’altro costruttore e non passa di qui.
-        // =========================
 
         UserManager.caricaUtenti();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -200,27 +198,27 @@ public class Mappa extends JFrame {
                 forme
         );
 
-        // ⭐ INIZIALIZZAZIONE SERVIZIO RITARDI REAL-TIME
+        //INIZIALIZZAZIONE SERVIZIO RITARDI REAL-TIME
         System.out.println("═══════════════════════════════════════════════");
         System.out.println("Inizializzazione servizio ritardi real-time...");
         System.out.println("═══════════════════════════════════════════════");
         delayService = new RealTimeDelayService(trips, rotte, stopTimes);
 
-        // ⭐ PASSA IL SERVIZIO AL PANNELLO RISULTATI
+        // PASSA IL SERVIZIO AL PANNELLO RISULTATI
         resultsPanel.setDelayService(delayService);
         System.out.println("✓ Servizio ritardi collegato al pannello risultati");
 
-        // ⭐ INIZIALIZZA PANNELLO QUALITÀ CONTESTUALE
-        qualityPanel = new ServiceQualityPanel(delayService);  // ✅ NUOVO: passa delayService
+        //INIZIALIZZA PANNELLO QUALITÀ CONTESTUALE
+        qualityPanel = new ServiceQualityPanel(delayService);  //passa delayService
         qualityPanel.setBounds(getWidth() - 410, 100, 380, 500);
         qualityPanel.setVisible(false);
         layeredPane.add(qualityPanel, JLayeredPane.PALETTE_LAYER);
         qualityPanel.setOnCloseListener(v -> qualityPanel.setVisible(false));
 
-        // ⭐ COLLEGA DASHBOARD AL RESULTS PANEL
+        //COLLEGA DASHBOARD AL RESULTS PANEL
         resultsPanel.setQualityPanel(qualityPanel);
 
-        System.out.println("✓ Dashboard qualità contestuale inizializzata");
+        System.out.println("Dashboard qualità contestuale inizializzata");
         System.out.println("═══════════════════════════════════════════════");
 
         // Configura i pannelli con i drawer
@@ -232,7 +230,7 @@ public class Mappa extends JFrame {
 
         // Listener per i preferiti
         favoritesPanel.setOnFavoriteClickListener(preferito -> {
-            System.out.println("✓ Preferito cliccato: " + preferito.getNome() + " (" + preferito.getTipo() + ")");
+            System.out.println("Preferito cliccato: " + preferito.getNome() + " (" + preferito.getTipo() + ")");
             resultsPanel.clearResults();
 
             if (preferito.getTipo().equals("FERMATA")) {
@@ -279,7 +277,7 @@ public class Mappa extends JFrame {
 
             // Se la ricerca è numerica → controllo anche per ID
             if (testo.matches("\\d+")) {
-                System.out.println("→ Ricerca numerica: controllo ID fermata e ID linea");
+                System.out.println("Ricerca numerica: controllo ID fermata e ID linea");
 
                 // 1 Cerca fermata con stop_id uguale
                 Fermate fermataTrovata = fermate.stream()
@@ -289,7 +287,7 @@ public class Mappa extends JFrame {
 
                 if (fermataTrovata != null) {
                     trovataFermata = true;
-                    System.out.println("✓ Fermata trovata per ID: " + fermataTrovata.getStopName());
+                    System.out.println("Fermata trovata per ID: " + fermataTrovata.getStopName());
                     resultsPanel.aggiornaRisultati(List.of(fermataTrovata));
                 }
 
@@ -301,7 +299,7 @@ public class Mappa extends JFrame {
 
                 if (rottaTrovata != null) {
                     trovataRotta = true;
-                    System.out.println("✓ Linea trovata per ID: " + rottaTrovata.getRouteShortName());
+                    System.out.println("Linea trovata per ID: " + rottaTrovata.getRouteShortName());
                     resultsPanel.aggiornaRisultatiRotte(List.of(rottaTrovata));
                 }
 
@@ -314,7 +312,7 @@ public class Mappa extends JFrame {
 
             } else {
                 // Ricerca testuale (nome)
-                System.out.println("→ Ricerca testuale: cerco fermate e linee per nome");
+                System.out.println("Ricerca testuale: cerco fermate e linee per nome");
 
                 List<Fermate> fermateTrovate = Database.ricercaFermatePerNome(fermate, testo);
                 List<Route> rotteTrovate = Database.ricercaRottePerNome(rotte, testo);
@@ -329,7 +327,7 @@ public class Mappa extends JFrame {
 
                 // POI AGGIUNGI LE LINEE (senza cancellare)
                 if (trovataRotta) {
-                    resultsPanel.aggiungiRisultatiRotte(rotteTrovate); // ← USA IL NUOVO METODO
+                    resultsPanel.aggiungiRisultatiRotte(rotteTrovate); // USA IL NUOVO METODO
                 }
             }
 
