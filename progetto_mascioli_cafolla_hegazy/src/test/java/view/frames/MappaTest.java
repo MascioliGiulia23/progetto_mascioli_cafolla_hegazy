@@ -17,7 +17,7 @@ class MappaTest {
         // Se l'ambiente è headless (CI/alcuni PC), i test UI vanno skippati per non fallire
         Assumptions.assumeFalse(GraphicsEnvironment.isHeadless());
 
-        Mappa mappa = new Mappa(true);
+        Mappa_Main mappa = new Mappa_Main(true);
 
         // inizialmente tutti invisibili (in test mode)
         assertFalse(mappa.getFavoritesPanelForTest().isVisible());
@@ -54,7 +54,7 @@ class MappaTest {
     void testApplyThemeDoesNotThrow() {
         Assumptions.assumeFalse(GraphicsEnvironment.isHeadless());
 
-        Mappa mappa = new Mappa(true);
+        Mappa_Main mappa = new Mappa_Main(true);
 
         assertDoesNotThrow(() -> mappa.applyThemeForTest("QUALSIASI_TEMA"));
 

@@ -22,9 +22,9 @@ import view.map.RouteDrawer;
 import view.map.WaypointDrawer;
 
 // (serve per i test)
-import java.awt.GraphicsEnvironment; // serve per i test
 
-public class Mappa extends JFrame {
+
+public class Mappa_Main extends JFrame {
     private JXMapViewer mapViewer;
     private JLayeredPane layeredPane;
     private SearchBar searchBar;
@@ -59,7 +59,7 @@ public class Mappa extends JFrame {
 
     // COSTRUTTORE PER TEST (serve per i test)
 
-    Mappa(boolean testMode) { // serve per i test
+    Mappa_Main(boolean testMode) { // serve per i test
         super("Roma Bus Tracker"); // serve per i test
 
         // In test mode inizializziamo solo i componenti minimi per testare logica e visibilità
@@ -101,7 +101,7 @@ public class Mappa extends JFrame {
         }
     }
 
-    public Mappa() {
+    public Mappa_Main() {
         super("Roma Bus Tracker");
 
         // BLOCCO PER TEST (serve per i test)
@@ -499,7 +499,7 @@ public class Mappa extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Mappa frame = new Mappa();
+            Mappa_Main frame = new Mappa_Main();
         });
     }
 
