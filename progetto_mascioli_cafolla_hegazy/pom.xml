@@ -119,7 +119,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.example.NomeTuaClassePrincipale</mainClass>
+                            <mainClass>view.frames.Mappa</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
