@@ -251,8 +251,6 @@ public class RealTimeDelayService {
         try {
             FeedMessage feed = tripFeedParser.apply(tripData);
 
-            System.out.println("[RealTimeDelayService] Feed entities: " + feed.getEntityCount());
-            System.out.println("[RealTimeDelayService] MATCHING PER STOP " + stopId + " ===");
 
             for (FeedEntity entity : feed.getEntityList()) {
                 if (!entity.hasTripUpdate()) continue;
@@ -311,9 +309,6 @@ public class RealTimeDelayService {
 
                         delaysByLineaOrario.put(chiave, delaySeconds);
 
-                        System.out.printf("[RealTimeDelayService] Linea %s @ stop %s, orario programmato %s: %d sec%n",
-                                nomeLinea, stopId, orarioProgrammatoStr, delaySeconds);
-
 
 
 
@@ -349,9 +344,7 @@ public class RealTimeDelayService {
             }
 
             lastFetchEpochMillis = now;
-            System.out.println("[RealTimeDelayService] FETCH NUOVO");
-        } else {
-            System.out.println("[RealTimeDelayService] CACHE RIUTILIZZATA");
+
         }
 
         return lastTripData;

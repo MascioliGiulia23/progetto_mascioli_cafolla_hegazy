@@ -78,9 +78,6 @@ public class RealTimeFetcher {
         }
 
 
-        System.out.println("[RealTimeFetcher] Status: " + response.statusCode() +
-                " | Size: " + response.body().length + " bytes");
-
         int code = response.statusCode();
         if (code < 200 || code >= 300) { // solo 2xx ok
             throw new IOException("HTTP error " + code);

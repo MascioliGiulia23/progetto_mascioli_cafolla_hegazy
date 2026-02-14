@@ -127,13 +127,9 @@ public class StopScheduleEngine {
 
         if (delayService != null && service.ConnectivityService.isOnline()) {
             try {
-                System.out.println("═══════════════════════════════════════════════");
-                System.out.println("[SearchResultsPanel] Richiesta ritardi per fermata: " + fermata.getStopId());
 
                 Map<String, Integer> delaysByLineaOrario = delayService.getDelaysByTripId(fermata.getStopId());
-                System.out.println("[SearchResultsPanel] Ritardi ricevuti per " + delaysByLineaOrario.size() + " combinazioni");
 
-                //FILTRA: Tieni SOLO le righe con dati RT
                 for (OrarioRow riga : righe) {
                     String chiaveRT = riga.nomeLinea + "#" + riga.orarioFormattato;
                     Integer delaySeconds = delaysByLineaOrario.get(chiaveRT);
@@ -152,11 +148,8 @@ public class StopScheduleEngine {
                         }
 
                         righeConRT.add(riga);
-                        System.out.println("[SearchResultsPanel]  Linea " + riga.nomeLinea + " orario " + riga.orarioFormattato);
                     }
                 }
-
-                System.out.println("═══════════════════════════════════════════════");
 
             } catch (Exception e) {
                 System.err.println("[SearchResultsPanel]  Errore caricamento ritardi: " + e.getMessage());
@@ -175,8 +168,7 @@ public class StopScheduleEngine {
                 mappaUnica.putIfAbsent(chiaveUnica, riga); // Tiene solo la prima
             }
             righeDaMostrare = new ArrayList<>(mappaUnica.values());
-            System.out.println("[SearchResultsPanel] Mostrando " + righeDaMostrare.size() + " linee REAL-TIME (rimosse " + (righeConRT.size() - righeDaMostrare.size()) + " duplicati)");
-        } else {
+         } else {
             // Anche per lo statico: rimuovi duplicati linea+orario
             Map<String, OrarioRow> mappaUnica = new LinkedHashMap<>();
             for (OrarioRow riga : righe) {

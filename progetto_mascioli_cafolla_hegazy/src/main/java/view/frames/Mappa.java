@@ -199,14 +199,12 @@ public class Mappa extends JFrame {
         );
 
         //INIZIALIZZAZIONE SERVIZIO RITARDI REAL-TIME
-        System.out.println("═══════════════════════════════════════════════");
         System.out.println("Inizializzazione servizio ritardi real-time...");
-        System.out.println("═══════════════════════════════════════════════");
         delayService = new RealTimeDelayService(trips, rotte, stopTimes);
 
         // PASSA IL SERVIZIO AL PANNELLO RISULTATI
         resultsPanel.setDelayService(delayService);
-        System.out.println("✓ Servizio ritardi collegato al pannello risultati");
+        System.out.println("Servizio ritardi collegato al pannello risultati");
 
         //INIZIALIZZA PANNELLO QUALITÀ CONTESTUALE
         qualityPanel = new ServiceQualityPanel(delayService);  //passa delayService
@@ -219,7 +217,6 @@ public class Mappa extends JFrame {
         resultsPanel.setQualityPanel(qualityPanel);
 
         System.out.println("Dashboard qualità contestuale inizializzata");
-        System.out.println("═══════════════════════════════════════════════");
 
         // Configura i pannelli con i drawer
         resultsPanel.setRouteDrawer(routeDrawer, forme);

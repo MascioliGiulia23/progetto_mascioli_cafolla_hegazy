@@ -13,10 +13,7 @@ import java.util.*;
 public class WaypointSupport {
 
      // Disegna (o aggiorna) il waypoint della singola fermata in "mostraOrariFermata".
-     //Replica 1:1 la logica che hai ora:
      // clearWaypoints()
-     //controlla che esista almeno un trip valido + rotta valida per quella fermata
-     // se sì, aggiunge 1 waypoint.
 
     public void updateStopWaypoint(WaypointDrawer waypointDrawer,
                                    Fermate fermata,

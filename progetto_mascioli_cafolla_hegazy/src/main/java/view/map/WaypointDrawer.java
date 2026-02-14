@@ -78,7 +78,7 @@ public class WaypointDrawer {
 
             lastOverlayPainterForTest = compoundPainter; // serve per i test
 
-            System.out.println(" Linea + waypoint disegnati correttamente.");
+            System.out.println(" Linea + waypoint disegnati correttamente");
         } else {
             mapViewer.setOverlayPainter(null);
 
